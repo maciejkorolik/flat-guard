@@ -77,6 +77,20 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      keyframes: {
+        "fade-slide-in": {
+          "0%": { opacity: "0", transform: "translateY(16px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "pulse-dot": {
+          "0%, 80%, 100%": { opacity: "0.2", transform: "scale(0.8)" },
+          "40%": { opacity: "1", transform: "scale(1)" },
+        },
+      },
+      animation: {
+        "fade-slide-in": "fade-slide-in 0.4s ease-out",
+        "pulse-dot": "pulse-dot 1.2s ease-in-out infinite",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

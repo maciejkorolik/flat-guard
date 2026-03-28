@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FlatGuard - Shortlist View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary-fixed-dim": "#bdc2ff",
+              "on-primary": "#ffffff",
+              "error-container": "#ffdad6",
+              "surface-dim": "#ccdbf3",
+              "on-error-container": "#93000a",
+              "on-secondary-fixed": "#00201c",
+              "on-background": "#0d1c2e",
+              "on-secondary-fixed-variant": "#005048",
+              "primary": "#000666",
+              "on-secondary-container": "#007165",
+              "inverse-on-surface": "#eaf1ff",
+              "surface-container-high": "#dce9ff",
+              "error": "#ba1a1a",
+              "on-tertiary-container": "#c98c00",
+              "on-primary-container": "#8690ee",
+              "surface": "#f8f9ff",
+              "primary-container": "#1a237e",
+              "secondary-container": "#8df5e4",
+              "surface-bright": "#f8f9ff",
+              "tertiary-fixed": "#ffdeac",
+              "inverse-surface": "#233144",
+              "surface-variant": "#d5e3fc",
+              "on-surface-variant": "#454652",
+              "surface-tint": "#4c56af",
+              "on-secondary": "#ffffff",
+              "secondary-fixed": "#8df5e4",
+              "primary-fixed": "#e0e0ff",
+              "surface-container-low": "#eff4ff",
+              "on-tertiary": "#ffffff",
+              "outline": "#767683",
+              "on-primary-fixed-variant": "#343d96",
+              "inverse-primary": "#bdc2ff",
+              "on-error": "#ffffff",
+              "on-surface": "#0d1c2e",
+              "tertiary": "#271800",
+              "on-tertiary-fixed-variant": "#604100",
+              "tertiary-container": "#422c00",
+              "on-primary-fixed": "#000767",
+              "on-tertiary-fixed": "#281900",
+              "background": "#f8f9ff",
+              "secondary": "#006b5f",
+              "outline-variant": "#c6c5d4",
+              "secondary-fixed-dim": "#70d8c8",
+              "surface-container-highest": "#d5e3fc",
+              "surface-container": "#e6eeff",
+              "tertiary-fixed-dim": "#ffba38",
+              "surface-container-lowest": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+        }
+        .ai-glow {
+            box-shadow: inset 0 0 12px rgba(0, 107, 95, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r-0 bg-slate-50 dark:bg-slate-950 flex flex-col p-4 z-50">
+<div class="mb-8 px-4 flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm" data-icon="shield">shield</span>
+</div>
+<div>
+<div class="text-xl font-bold text-indigo-900 dark:text-indigo-100">FlatGuard</div>
+<div class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Active Project</div>
+</div>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+                Interview
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+                Search
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-800 rounded-lg shadow-sm font-['Manrope'] font-medium text-sm scale-[0.98] duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="grade" style="font-variation-settings: 'FILL' 1;">grade</span>
+                Shortlist
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="handshake">handshake</span>
+                Deal-flow
+            </a>
+</nav>
+<button class="mt-auto w-full py-3 bg-primary text-white rounded-xl font-headline font-bold text-sm shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+            New Project
+        </button>
+</aside>
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200/20 dark:border-slate-800/20 flex items-center justify-between px-8 h-16">
+<div class="flex items-center gap-8">
+<div class="relative group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-lg" data-icon="search">search</span>
+<input class="bg-surface-container-low border-none rounded-full pl-10 pr-4 py-1.5 text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search project Alpha..." type="text"/>
+</div>
+<nav class="flex gap-6">
+<a class="text-slate-400 dark:text-slate-500 font-['Manrope'] text-sm tracking-tight hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" href="#">Project Alpha</a>
+<a class="text-indigo-900 dark:text-indigo-100 font-semibold font-['Manrope'] text-sm tracking-tight" href="#">Profile v2.1</a>
+<a class="text-slate-400 dark:text-slate-500 font-['Manrope'] text-sm tracking-tight hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" href="#">Brussels Search</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-primary-container">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="close-up portrait of a professional man with a friendly expression in a modern office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvUH5FJHmD0SNIbcDKHVRiorY12YYQrpc-_TnXRGQe5O2JaqAHddLdw7ReMPpeCkooTrgleqwj8iP6P3Bm3P-ePpOYWpIjSp2dhB4RjcGS0463_upWhiyIUAdGK9ZTuO6P_cGFDTtFxou9KC5CgA0S_sP3V0_op6-cpzZ-vaDh4tNYijbQgarwc439BnQ-glcaUgxKgA_37rvu-Sr4RzBTwtUhMl-ox-dMNue-k0grEHvm5WfGj3TLVxLsvNvJ090PCy_p4QX_tYQ"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 pb-12 px-8">
+<!-- Dashboard Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+<div>
+<h1 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight mb-2">My Shortlist</h1>
+<p class="text-on-surface-variant max-w-lg">Review your top architectural matches and track landlord communications.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex bg-surface-container-high rounded-lg p-1">
+<button class="px-4 py-1.5 rounded-md bg-white shadow-sm text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="grid_view">grid_view</span> Grid
+                    </button>
+<button class="px-4 py-1.5 rounded-md text-on-surface-variant text-sm font-medium flex items-center gap-2 hover:bg-white/50 transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="map">map</span> Map View
+                    </button>
+</div>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="flex flex-wrap items-center justify-between gap-4 mb-8 bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
+<div class="flex gap-2">
+<button class="px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-medium">All Status</button>
+<button class="px-4 py-2 bg-surface-container-lowest text-on-surface-variant rounded-lg text-sm font-medium hover:bg-surface-container-high transition-colors">Saved</button>
+<button class="px-4 py-2 bg-surface-container-lowest text-on-surface-variant rounded-lg text-sm font-medium hover:bg-surface-container-high transition-colors">Contacted</button>
+<button class="px-4 py-2 bg-surface-container-lowest text-on-surface-variant rounded-lg text-sm font-medium hover:bg-surface-container-high transition-colors">Rejected</button>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-xs font-semibold uppercase tracking-widest text-on-surface-variant/60">Sort By</span>
+<select class="bg-surface-container-lowest border-none text-sm rounded-lg focus:ring-primary/20 py-2 pl-3 pr-8">
+<option>AI Match Score</option>
+<option>Rent (Low to High)</option>
+<option>Rent (High to Low)</option>
+<option>Surface Area</option>
+</select>
+</div>
+</div>
+<!-- Shortlist Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+<!-- Entry 1: High Match -->
+<div class="bg-surface-container-lowest rounded-2xl overflow-hidden flex flex-col md:flex-row group transition-all hover:shadow-xl hover:shadow-indigo-900/5 ai-glow relative">
+<!-- Status Badge Corner -->
+<div class="absolute top-4 right-4 z-10">
+<div class="px-3 py-1 bg-secondary/10 text-secondary border border-secondary/20 rounded-full text-xs font-bold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                        Contacted
+                    </div>
+</div>
+<div class="w-full md:w-56 h-64 md:h-auto overflow-hidden">
+<img alt="Apartment 1" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="modern minimalist apartment interior with floor to ceiling windows and elegant eames chair in corner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzwpcH9g0IM_toEmaJFm4e8wUueaXDu8b-Uy1R1e1GO-N3tcuLgxXefh8_FgYCU6x38ELhXkC_M2C712patNriU0WcaOuuIo3XGCpIR9aXt0HzV0kuPHOZmIeCyLWOLeQrhJLZ9-cnSAF7sZ7FXwkNAuH0qeFKDFk70Rl6iTL9TTMV_r_dyO0wizQ1MtS5In1Wwh3GapWZAnGyymF5EcWhvxIuOzxIFGweKDe632QEHR-70ACreEDFXk4p7bZt4ohg-WszgXO703g"/>
+</div>
+<div class="flex-1 p-6 flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline font-bold text-xl text-on-surface mb-1">Loft de l'Architecte</h3>
+<p class="text-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="location_on">location_on</span>
+                                Ixelles, Brussels
+                            </p>
+</div>
+<div class="bg-secondary-container/30 px-3 py-2 rounded-xl text-center border border-secondary/10">
+<div class="text-[10px] uppercase font-bold text-secondary tracking-tighter">AI Match</div>
+<div class="text-lg font-extrabold text-secondary">92%</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-surface-container-low p-3 rounded-lg">
+<div class="text-[10px] uppercase font-bold text-on-surface-variant/60 mb-1">Monthly Rent</div>
+<div class="text-lg font-headline font-bold text-primary">€1,450</div>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg">
+<div class="text-[10px] uppercase font-bold text-on-surface-variant/60 mb-1">Surface Area</div>
+<div class="text-lg font-headline font-bold text-primary">85 m²</div>
+</div>
+</div>
+<div class="space-y-4 flex-1">
+<div>
+<label class="text-[10px] uppercase font-bold text-on-surface-variant/60 block mb-2">My Notes</label>
+<textarea class="w-full bg-surface-container-low border-none rounded-xl text-sm p-3 focus:ring-primary/20 placeholder:text-on-surface-variant/40 resize-none h-20" placeholder="Add private notes about this listing..."></textarea>
+</div>
+</div>
+<div class="mt-6 flex items-center gap-3">
+<button class="flex-1 bg-gradient-to-r from-primary to-primary-container text-on-primary py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="smart_toy">smart_toy</span>
+                            Call via AI
+                        </button>
+<button class="p-2.5 bg-surface-container-high rounded-lg text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Entry 2: Gap Fill Alert -->
+<div class="bg-surface-container-lowest rounded-2xl overflow-hidden flex flex-col md:flex-row group transition-all hover:shadow-xl hover:shadow-indigo-900/5 relative">
+<div class="absolute top-4 left-4 z-10">
+<div class="px-2 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-md text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[14px]" data-icon="warning">warning</span>
+                        2 GAPS DETECTED
+                    </div>
+</div>
+<div class="absolute top-4 right-4 z-10">
+<div class="px-3 py-1 bg-surface-container-high text-on-surface-variant border border-outline-variant/20 rounded-full text-xs font-bold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                        Saved
+                    </div>
+</div>
+<div class="w-full md:w-56 h-64 md:h-auto overflow-hidden">
+<img alt="Apartment 2" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="bright open plan apartment with high ceilings and white wooden floors in a historic european building" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSYJL9npF_sxKQXtOagj0EmRd8-AR4Esxff48wvFqASLfrBX14TodgsdjDCVN_WA7OSz_c07I0m7Vx5yDwuj0D5UbdgTY28rpS_ckmm75cO_vPhdQTBQZcE7rsjrA2O_GOpTq89QUyZeup6qJWLOO9gncWejnKg-PV2wu3G2W8mUKAWWuhnOszyE32CsgfwMt8Q2sZJ3QEUeRuug9QSczMlL1ILicOqPxxQiNAsmsSxlzB5k6sQGvE-UWzIgLE_mgdGQBHXiXD-Jk"/>
+</div>
+<div class="flex-1 p-6 flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline font-bold text-xl text-on-surface mb-1">Belle Vue Penthouse</h3>
+<p class="text-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="location_on">location_on</span>
+                                Saint-Gilles, Brussels
+                            </p>
+</div>
+<div class="bg-surface-container-high px-3 py-2 rounded-xl text-center">
+<div class="text-[10px] uppercase font-bold text-on-surface-variant tracking-tighter">AI Match</div>
+<div class="text-lg font-extrabold text-on-surface">78%</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-surface-container-low p-3 rounded-lg">
+<div class="text-[10px] uppercase font-bold text-on-surface-variant/60 mb-1">Monthly Rent</div>
+<div class="text-lg font-headline font-bold text-primary">€1,200</div>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg">
+<div class="text-[10px] uppercase font-bold text-on-surface-variant/60 mb-1">Surface Area</div>
+<div class="text-lg font-headline font-bold text-primary">62 m²</div>
+</div>
+</div>
+<div class="space-y-4 flex-1">
+<div>
+<label class="text-[10px] uppercase font-bold text-on-surface-variant/60 block mb-2">My Notes</label>
+<textarea class="w-full bg-surface-container-low border-none rounded-xl text-sm p-3 focus:ring-primary/20 placeholder:text-on-surface-variant/40 resize-none h-20" placeholder="Ask AI to find out if pets are allowed..."></textarea>
+</div>
+</div>
+<div class="mt-6 flex items-center gap-3">
+<button class="flex-1 bg-gradient-to-r from-primary to-primary-container text-on-primary py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="smart_toy">smart_toy</span>
+                            Call via AI
+                        </button>
+<button class="p-2.5 bg-surface-container-high rounded-lg text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Entry 3: Modern Layout -->
+<div class="bg-surface-container-lowest rounded-2xl overflow-hidden flex flex-col md:flex-row group transition-all hover:shadow-xl hover:shadow-indigo-900/5 relative">
+<div class="absolute top-4 right-4 z-10">
+<div class="px-3 py-1 bg-error-container text-on-error-container border border-error/20 rounded-full text-xs font-bold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                        Rejected
+                    </div>
+</div>
+<div class="w-full md:w-56 h-64 md:h-auto overflow-hidden">
+<img alt="Apartment 3" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="architectural shot of a luxury villa with sharp clean lines and a glass balcony overlooking a garden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBb6LJ7kgr2r5TEOtIWgHlyJJd82UQ4eAFOypRvIVEOcTlfOOgipAXTiBqpdeWoSscoZdIFsKuXEQRrwSLXqwnQCRRqnj8ebSSNy0x2jjvfHWkNlpM4sAFsp2aB_go111lPLCdTkmj7-N67jLSEhiDD_HrAzQ-sym6WsTl1Z3FYKnrkARIYaMz_XYLBqXl9B-fxEwPchSWEVGElJToSa-a_trWjBNeSskT951YHwstujmsr5zG62imA4Y3x3W1iR5SZIPW0InIwaQo"/>
+</div>
+<div class="flex-1 p-6 flex flex-col opacity-70">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline font-bold text-xl text-on-surface mb-1">Maison de Maître</h3>
+<p class="text-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="location_on">location_on</span>
+                                Uccle, Brussels
+                            </p>
+</div>
+<div class="bg-surface-container-high px-3 py-2 rounded-xl text-center">
+<div class="text-[10px] uppercase font-bold text-on-surface-variant tracking-tighter">AI Match</div>
+<div class="text-lg font-extrabold text-on-surface">61%</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-surface-container-low p-3 rounded-lg">
+<div class="text-[10px] uppercase font-bold text-on-surface-variant/60 mb-1">Monthly Rent</div>
+<div class="text-lg font-headline font-bold text-primary">€1,950</div>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg">
+<div class="text-[10px] uppercase font-bold text-on-surface-variant/60 mb-1">Surface Area</div>
+<div class="text-lg font-headline font-bold text-primary">110 m²</div>
+</div>
+</div>
+<div class="space-y-4 flex-1">
+<div>
+<label class="text-[10px] uppercase font-bold text-on-surface-variant/60 block mb-2">My Notes</label>
+<textarea class="w-full bg-surface-container-low border-none rounded-xl text-sm p-3 focus:ring-primary/20 placeholder:text-on-surface-variant/40 resize-none h-20" placeholder="Too expensive and far from the metro station."></textarea>
+</div>
+</div>
+<div class="mt-6 flex items-center gap-3">
+<button class="flex-1 bg-surface-container-high text-on-surface-variant py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 cursor-not-allowed">
+<span class="material-symbols-outlined text-sm" data-icon="smart_toy">smart_toy</span>
+                            Call via AI
+                        </button>
+<button class="p-2.5 bg-surface-container-high rounded-lg text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined" data-icon="restore">restore</span>
+</button>
+</div>
+</div>
+</div>
+<!-- AI Insight Bento Box -->
+<div class="bg-gradient-to-br from-indigo-900 to-primary-container rounded-2xl p-8 text-white flex flex-col justify-between overflow-hidden relative">
+<div class="absolute -right-12 -top-12 w-64 h-64 bg-secondary/20 rounded-full blur-3xl"></div>
+<div>
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="insights">insights</span>
+</div>
+<h3 class="font-headline font-bold text-xl">Curator Insights</h3>
+</div>
+<p class="text-indigo-100/80 leading-relaxed mb-6">
+                        Based on your shortlist, you prioritize <span class="text-secondary-fixed font-bold">natural light</span> and <span class="text-secondary-fixed font-bold">Saint-Gilles district</span>. 
+                    </p>
+<div class="space-y-3">
+<div class="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/5 flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface/10 flex-shrink-0 flex items-center justify-center font-extrabold text-secondary">
+                                98%
+                            </div>
+<div>
+<div class="text-xs font-bold uppercase tracking-wide text-indigo-200">New Suggestion</div>
+<div class="text-sm font-semibold">Duplex near Place Van Meenen</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-8 border-t border-white/10 flex items-center justify-between">
+<div class="text-xs text-indigo-200">AI Curator is active</div>
+<button class="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-bold shadow-lg shadow-secondary/20">Analyze Market Gaps</button>
+</div>
+</div>
+</div>
+<!-- Floating Map Preview (Fixed Bottom Right) -->
+<div class="fixed bottom-8 right-8 z-30 group">
+<div class="absolute bottom-full right-0 mb-4 scale-0 group-hover:scale-100 transition-transform origin-bottom-right duration-300">
+<div class="w-72 h-48 rounded-2xl overflow-hidden shadow-2xl border-4 border-white glass-card">
+<img alt="Map Preview" class="w-full h-full object-cover" data-location="Brussels, Belgium" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAG9ndkH8zSaYD9BLZg8uJ28sdoH6L7oVjSBNP7Mx9NAjHls20Tg7K3-LmBjlX7ySFvrbTRUm6nOFoencBLKB70mosQ0-w2J0_Bn1FUCBco0akP3ISfI2FjkmXHNpjrqyOsfcxm8a_WqTExPfWAamvaH2kL9Ds0s1fGhZZ5RVbS5rY75U6G2B27w9k7DWz7lzG7fsQHFwQP7hmAmE9i38noQWLTYMHekwAxyQKWcGtAEz2rcnRtnJL8WO6-5w-8SyWEE6Ajy_olpoE"/>
+<div class="absolute inset-0 bg-primary/10"></div>
+<div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="location_on">location_on</span>
+                        Brussels Central
+                    </div>
+</div>
+</div>
+<button class="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+</button>
+</div>
+</main>
+</body></html>

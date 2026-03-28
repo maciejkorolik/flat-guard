@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FlatGuard - Search Results</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, .font-headline { font-family: 'Manrope', sans-serif; }
+        .radar-grid {
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary-fixed-dim": "#bdc2ff",
+                "on-primary": "#ffffff",
+                "error-container": "#ffdad6",
+                "surface-dim": "#ccdbf3",
+                "on-error-container": "#93000a",
+                "on-secondary-fixed": "#00201c",
+                "on-background": "#0d1c2e",
+                "on-secondary-fixed-variant": "#005048",
+                "primary": "#000666",
+                "on-secondary-container": "#007165",
+                "inverse-on-surface": "#eaf1ff",
+                "surface-container-high": "#dce9ff",
+                "error": "#ba1a1a",
+                "on-tertiary-container": "#c98c00",
+                "on-primary-container": "#8690ee",
+                "surface": "#f8f9ff",
+                "primary-container": "#1a237e",
+                "secondary-container": "#8df5e4",
+                "surface-bright": "#f8f9ff",
+                "tertiary-fixed": "#ffdeac",
+                "inverse-surface": "#233144",
+                "surface-variant": "#d5e3fc",
+                "on-surface-variant": "#454652",
+                "surface-tint": "#4c56af",
+                "on-secondary": "#ffffff",
+                "secondary-fixed": "#8df5e4",
+                "primary-fixed": "#e0e0ff",
+                "surface-container-low": "#eff4ff",
+                "on-tertiary": "#ffffff",
+                "outline": "#767683",
+                "on-primary-fixed-variant": "#343d96",
+                "inverse-primary": "#bdc2ff",
+                "on-error": "#ffffff",
+                "on-surface": "#0d1c2e",
+                "tertiary": "#271800",
+                "on-tertiary-fixed-variant": "#604100",
+                "tertiary-container": "#422c00",
+                "on-primary-fixed": "#000767",
+                "on-tertiary-fixed": "#281900",
+                "background": "#f8f9ff",
+                "secondary": "#006b5f",
+                "outline-variant": "#c6c5d4",
+                "secondary-fixed-dim": "#70d8c8",
+                "surface-container-highest": "#d5e3fc",
+                "surface-container": "#e6eeff",
+                "tertiary-fixed-dim": "#ffba38",
+                "surface-container-lowest": "#ffffff"
+              },
+              fontFamily: {
+                "headline": ["Manrope"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- Shared SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r-0 bg-slate-50 dark:bg-slate-950 flex flex-col p-4 z-50">
+<div class="mb-8 px-2 flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold">F</div>
+<div>
+<h1 class="text-xl font-bold text-indigo-900 dark:text-indigo-100 font-headline leading-tight">FlatGuard</h1>
+<p class="text-xs text-slate-500 font-medium">Active Project</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-['Manrope'] font-medium text-sm">Interview</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-800 rounded-lg shadow-sm scale-[0.98] duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-['Manrope'] font-medium text-sm">Search</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="grade">grade</span>
+<span class="font-['Manrope'] font-medium text-sm">Shortlist</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="handshake">handshake</span>
+<span class="font-['Manrope'] font-medium text-sm">Deal-flow</span>
+</a>
+</nav>
+<button class="mt-auto w-full py-3 px-4 bg-primary text-on-primary rounded-lg font-headline font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+        New Project
+    </button>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- Shared TopAppBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200/20 dark:border-slate-800/20 flex items-center justify-between px-8 h-16">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-6">
+<a class="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-['Manrope'] text-sm tracking-tight" href="#">Project Alpha</a>
+<a class="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-['Manrope'] text-sm tracking-tight" href="#">Profile v2.1</a>
+<a class="text-indigo-900 dark:text-indigo-100 font-semibold font-['Manrope'] text-sm tracking-tight" href="#">Brussels Search</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/30">
+<img alt="User Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1si0DUYu6xLHds67JyFoorT6CPXW7O3J41s6m861PSCaU7gCuhf9tVDirZ9sKjRmMqcdJKP-EA3rGTfMJRmdfd9rIcMr4b8UXkYjMhHkrchp8RYnEs4jD13jIBRPphsnASrHjkehaB1jLF-0XqH4-cAjTSuY10cWlkio5j698lxypZ6ifQBCOIeTrZ0-55RcpzCqZ24N02ndfj8LMLlgoXFFji6rn6QChtaCY8-qlQZqIrkPSaqKtUyqYF6AJ1u8xrGDlZUg7xfg"/>
+</div>
+</div>
+</header>
+<!-- Search Header & Horizontal Filters -->
+<section class="mt-16 bg-surface-container-low border-b border-outline-variant/10">
+<div class="px-8 py-6 flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<div class="space-y-1">
+<h2 class="text-2xl font-extrabold text-on-surface font-headline tracking-tight">Search run #3 - based on Profile v3</h2>
+<div class="flex items-center gap-4 text-sm text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>Run #1</span>
+</div>
+<span class="text-outline-variant">→</span>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>Run #2</span>
+</div>
+<span class="text-outline-variant">→</span>
+<div class="flex items-center gap-2 font-semibold text-primary">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span>Run #3 (Latest)</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="bg-surface-container-highest p-1 rounded-lg flex gap-1">
+<button class="px-4 py-1.5 bg-surface-container-lowest text-primary font-semibold rounded shadow-sm text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-lg" data-icon="list">list</span>
+                            List
+                        </button>
+<button class="px-4 py-1.5 text-on-surface-variant hover:bg-surface-container-lowest/50 rounded text-sm flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="map">map</span>
+                            Map
+                        </button>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-lg" data-icon="refresh">refresh</span>
+                        Re-run
+                    </button>
+</div>
+</div>
+<!-- Core Filters Row -->
+<div class="grid grid-cols-4 gap-8 items-end bg-surface-container-lowest/50 p-5 rounded-xl border border-outline-variant/20">
+<div class="space-y-2">
+<label class="text-xs font-bold uppercase tracking-wider text-outline block">Max Price</label>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center text-sm">
+<span class="font-bold text-on-surface">€1,850</span>
+<span class="text-xs text-outline">Max budget</span>
+</div>
+<input class="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none accent-primary" type="range"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold uppercase tracking-wider text-outline block">Min Area</label>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center text-sm">
+<span class="font-bold text-on-surface">65 m²</span>
+<span class="text-xs text-outline">Minimum</span>
+</div>
+<input class="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none accent-primary" type="range"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold uppercase tracking-wider text-outline block">Score Threshold</label>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center text-sm">
+<span class="font-bold text-secondary">85% Match</span>
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<input class="w-full h-1.5 bg-secondary-container rounded-full appearance-none accent-secondary" type="range"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold uppercase tracking-wider text-outline block">Price Fit Weight</label>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center text-sm">
+<span class="font-bold text-on-surface-variant">High Impact</span>
+</div>
+<input class="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none accent-primary" type="range"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Workspace -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Center Content: Listing Cards -->
+<section class="flex-1 overflow-y-auto p-8 bg-surface space-y-6">
+<div class="flex items-center justify-between mb-2">
+<span class="text-sm font-medium text-on-surface-variant">Showing <span class="text-on-surface font-extrabold">14 Curated Matches</span></span>
+<div class="flex items-center gap-2">
+<span class="text-xs text-outline font-medium">Sort by:</span>
+<select class="text-xs font-bold border border-outline-variant/30 bg-surface-container-lowest rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-primary/20 text-primary cursor-pointer">
+<option>Highest Match Score</option>
+<option>Price: Low to High</option>
+<option>Latest Listing</option>
+</select>
+</div>
+</div>
+<!-- Listing Card 1 -->
+<article class="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm flex group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 border border-outline-variant/10">
+<div class="w-72 h-auto relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="modern minimalist apartment interior with floor to ceiling windows and light wood flooring overlooking a city park at dusk" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvEPoJamQl5yAsa2sKJ0xGbB-YyGXriqHcySyWusFSOITs_HB8_bc9OwoJ0vaYFFkERBANbvMg4Fzadm5B_lUkgn-cp29hEFFNsMnZ3kZ4kFscv9rUFKToHeggv5blH3PhWyMjp_FIgamp11CbOqeuKoC7W5GtnDa274kCGvJdWAc9ThwDQRsl7XMXd5RTa9dUOfWILiloKs-FUqMNTzWRTWmdTr79QMcmEaFEpLLViBWHm1DtUSV1toJzDP8Of8Y0wGIk2gRIAaY"/>
+<div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-bold text-primary flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-xs" data-icon="verified">verified</span>
+                        VERIFIED AGENT
+                    </div>
+</div>
+<div class="flex-1 p-8 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="text-2xl font-bold text-on-surface font-headline leading-tight mb-2">Ixelles Panoramic Residence</h3>
+<p class="text-sm text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-lg text-primary/60" data-icon="location_on">location_on</span>
+                                Place du Châtelain, Ixelles
+                            </p>
+</div>
+<div class="text-right">
+<div class="text-3xl font-black text-primary font-headline">€1,450<span class="text-sm font-normal text-outline">/mo</span></div>
+<div class="mt-1 px-3 py-1 bg-secondary/10 rounded-full text-[10px] text-secondary font-bold flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="trending_down">trending_down</span>
+                                €150 below budget
+                            </div>
+</div>
+</div>
+<div class="flex items-center gap-8 mb-8">
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-outline uppercase tracking-wider">Area</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="square_foot">square_foot</span>
+<span class="text-sm font-semibold">78 m²</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-outline uppercase tracking-wider">Layout</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="bed">bed</span>
+<span class="text-sm font-semibold">2 Rooms</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-outline uppercase tracking-wider">Floor</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="layers">layers</span>
+<span class="text-sm font-semibold">4th Floor</span>
+</div>
+</div>
+</div>
+<div class="mt-auto flex items-center gap-5 py-4 border-t border-outline-variant/10">
+<div class="flex items-center gap-2 text-xs font-bold text-secondary">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+                            within budget
+                        </div>
+<div class="flex items-center gap-2 text-xs font-bold text-on-tertiary-fixed-variant">
+<span class="material-symbols-outlined text-sm" data-icon="warning">warning</span>
+                            no pet info
+                        </div>
+<div class="flex items-center gap-2 text-xs font-bold text-secondary">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+                            furnished
+                        </div>
+</div>
+</div>
+<div class="w-56 bg-surface-container-low/20 p-8 flex flex-col items-center justify-center border-l border-outline-variant/10">
+<div class="relative w-28 h-28 mb-4 flex items-center justify-center">
+<div class="absolute inset-0 radar-grid bg-secondary/5 border border-secondary/10"></div>
+<div class="absolute inset-0 radar-grid scale-[0.8] bg-secondary/30 border border-secondary/60"></div>
+<div class="absolute inset-0 radar-grid scale-[0.9] bg-secondary/10 border border-secondary/20"></div>
+<span class="text-3xl font-black text-secondary font-headline">94</span>
+</div>
+<span class="text-[10px] font-extrabold text-outline uppercase tracking-[0.2em] mb-6">Match Score</span>
+<button class="w-full py-3 bg-primary text-on-primary text-xs font-bold rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all">View Details</button>
+</div>
+</article>
+<!-- Listing Card 2 -->
+<article class="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm flex group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 border border-outline-variant/10">
+<div class="w-72 h-auto relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="bright open-plan kitchen and dining area with modern white cabinetry and large windows letting in afternoon sun" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7WzTrdKyYFvzGtCz3E8Lv9sbKce_RcbI2VcH8l7SwfCrrvMqniOYw3fxkAwwA4W_3HggG1_5vf669gf8bcj-hwKKi_uJMninvB_2EiNOPrXnOx18kS8T3bky4n13T6SrghT6q6ovYRN-nL2wemFW8V4ngsab0-_rm_iUVoNWCPSnfgvJ812CMYGxsx9tJzVwu_-QUkLZ5CQV_IACDDb1CjSbB_4PCNF_1Q2-QOm3tEPDcUMrWSQjDy6vnGv09KrrcIcp7rx4JWbU"/>
+</div>
+<div class="flex-1 p-8 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="text-2xl font-bold text-on-surface font-headline leading-tight mb-2">Saint-Gilles Loft Space</h3>
+<p class="text-sm text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-lg text-primary/60" data-icon="location_on">location_on</span>
+                                Rue de l'Hôtel des Monnaies, Saint-Gilles
+                            </p>
+</div>
+<div class="text-right">
+<div class="text-3xl font-black text-primary font-headline">€1,700<span class="text-sm font-normal text-outline">/mo</span></div>
+<div class="mt-1 text-xs text-on-surface-variant font-medium">Top limit of budget</div>
+</div>
+</div>
+<div class="flex items-center gap-8 mb-8">
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-outline uppercase tracking-wider">Area</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="square_foot">square_foot</span>
+<span class="text-sm font-semibold">92 m²</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-outline uppercase tracking-wider">Layout</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="bed">bed</span>
+<span class="text-sm font-semibold">1 Room</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-outline uppercase tracking-wider">Floor</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="layers">layers</span>
+<span class="text-sm font-semibold">Ground Floor</span>
+</div>
+</div>
+</div>
+<div class="mt-auto flex items-center gap-5 py-4 border-t border-outline-variant/10">
+<div class="flex items-center gap-2 text-xs font-bold text-secondary">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+                            High area match
+                        </div>
+<div class="flex items-center gap-2 text-xs font-bold text-secondary">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+                            Pet friendly
+                        </div>
+</div>
+</div>
+<div class="w-56 bg-surface-container-low/20 p-8 flex flex-col items-center justify-center border-l border-outline-variant/10">
+<div class="relative w-28 h-28 mb-4 flex items-center justify-center">
+<div class="absolute inset-0 radar-grid bg-secondary/5 border border-secondary/10"></div>
+<div class="absolute inset-0 radar-grid scale-[0.65] bg-secondary/30 border border-secondary/60"></div>
+<span class="text-3xl font-black text-secondary font-headline">82</span>
+</div>
+<span class="text-[10px] font-extrabold text-outline uppercase tracking-[0.2em] mb-6">Match Score</span>
+<button class="w-full py-3 border-2 border-primary text-primary text-xs font-bold rounded-xl hover:bg-primary hover:text-on-primary hover:-translate-y-0.5 transition-all">View Details</button>
+</div>
+</article>
+</section>
+<!-- Right Panel: Agentic Chat -->
+<aside class="w-96 bg-surface-container-lowest border-l border-outline-variant/10 flex flex-col relative">
+<div class="p-6 border-b border-outline-variant/10 bg-surface-container-low/20">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-lg" data-icon="smart_toy">smart_toy</span>
+</div>
+<h3 class="text-sm font-bold text-on-surface">Agent Insight</h3>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+                    I found 14 properties matching your Profile v3. The Ixelles residence is particularly interesting given your priority for natural light.
+                </p>
+</div>
+<div class="flex-1 p-4 overflow-y-auto space-y-4">
+<div class="bg-surface-container-low p-4 rounded-2xl rounded-tl-none border border-outline-variant/5">
+<p class="text-xs text-on-surface leading-normal">How much extra is a 2nd bedroom costing me on average in this search?</p>
+</div>
+<div class="bg-secondary/5 p-4 rounded-2xl rounded-tr-none border border-secondary/20">
+<p class="text-xs text-on-surface leading-normal">In Ixelles and Saint-Gilles, a 2nd bedroom adds approximately €320 to the monthly rent based on current results.</p>
+</div>
+</div>
+<div class="p-4 bg-white space-y-4 border-t border-outline-variant/10">
+<div class="flex flex-wrap gap-2">
+<button class="px-3 py-1.5 bg-surface-container-high text-[10px] font-bold text-primary rounded-full hover:bg-primary hover:text-on-primary transition-colors">Compare top 3</button>
+<button class="px-3 py-1.5 bg-surface-container-high text-[10px] font-bold text-primary rounded-full hover:bg-primary hover:text-on-primary transition-colors">Why 82 score?</button>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-low border-none rounded-xl text-sm px-4 py-3.5 focus:ring-2 focus:ring-primary/20 placeholder:text-outline/60" placeholder="Ask follow-up..." type="text"/>
+<button class="absolute right-3 top-2.5 text-primary p-1.5 bg-primary/5 rounded-lg">
+<span class="material-symbols-outlined text-xl" data-icon="send">send</span>
+</button>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- Map View Preview (Suppressed but accessible via switcher in real app) -->
+<div class="hidden" id="map-preview">
+<div data-location="Brussels, Belgium"></div>
+</div>
+</body></html>
