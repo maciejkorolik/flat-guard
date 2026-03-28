@@ -196,6 +196,9 @@ export function SearchClient({ projectId, profile }: SearchClientProps) {
 
   const sorted = sortListings(rawListings, scoreMap, phase === "done" ? sortKey : "none");
   const isDone = phase === "done";
+  const assistantReady =
+    isDone &&
+    (rawListings.length === 0 || scoreMap.size === rawListings.length);
 
   return (
     <>
@@ -246,9 +249,9 @@ export function SearchClient({ projectId, profile }: SearchClientProps) {
         </div>
 
         {/* Body: cards + chat panel */}
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0 min-w-0">
           {/* Cards */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-3">
+          <div className="flex-1 min-h-0 min-w-0 overflow-y-auto px-6 py-5 space-y-4">
             {phase === "phase1" && (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="w-12 h-12 bg-[#eff4ff] rounded-2xl flex items-center justify-center">
@@ -274,7 +277,8 @@ export function SearchClient({ projectId, profile }: SearchClientProps) {
           <SearchChatPanel
             projectId={projectId}
             scoredListings={scoredListings}
-            allDone={isDone}
+            rawListings={rawListings}
+            assistantReady={assistantReady}
             onShortlistFromChat={handleShortlistFromChat}
           />
         </div>

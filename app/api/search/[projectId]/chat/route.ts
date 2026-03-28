@@ -1,21 +1,39 @@
 import { streamText, convertToModelMessages, stepCountIs } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { createClient } from "@/lib/supabase/server";
+import { firstLine, parseFlatPicturesUrlColumn } from "@/lib/listing-normalize";
+import {
+  LISTING_WITH_ENRICHMENT_COLUMNS,
+  searchFlatsInputSchema,
+  execSearchFlats,
+  execGetFlatSearchCardData,
+  execGetGeoData,
+  execGetSunData,
+  execGetWeatherData,
+  execGetAirQualityData,
+  execGetPlacesNearby,
+  execGetSearchExplainability,
+  execGetEnrichmentCoverage,
+  type FlatSearchToolsCtx,
+} from "@/lib/flat-search-chat-tools";
 import { z } from "zod";
-import type { ScoredListing, NormalizedListing } from "@/lib/types/flatguard";
-
-function firstLine(value: string | null): string | null {
-  if (!value) return null;
-  return value.split("\n")[0].trim() || null;
-}
+import type { ScoredListing } from "@/lib/types/flatguard";
+import { RESPOND_IN_ENGLISH_RULE } from "@/lib/ai-language-policy";
+import { buildSearchAssistantSystemPrompt } from "@/lib/search-chat-system-prompt";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
+
+  if (!process.env.OPENAI_API_KEY) {
+    return new Response("OpenAI API key not configured", { status: 503 });
+  }
 
   const { projectId } = await params;
 
@@ -32,101 +50,183 @@ export async function POST(
     scoredListings: ScoredListing[];
   };
 
-  // Build compact listing context for system prompt
-  const listingContext = scoredListings.length > 0
-    ? scoredListings
-        .map((s, i) =>
-          `[${i + 1}] id=${s.listing.id} | "${s.listing.title ?? "Untitled"}" | ` +
-          `${s.listing.district ?? s.listing.city} | ` +
-          `${s.listing.rent_pln ? s.listing.rent_pln + " PLN/mo" : "?"} | ` +
-          `${s.listing.rooms ?? "?"}R ${s.listing.area_m2 ?? "?"}m² | ` +
-          `score=${s.overallScore} (${s.recommendation})`
-        )
-        .join("\n")
-    : "No scored listings yet.";
+  const allowedListingIds = new Set(scoredListings.map((s) => s.listing.id));
+  const flatCtx: FlatSearchToolsCtx = { allowedListingIds, scoredListings };
 
-  const systemPrompt = `You are the FlatGuard Search Assistant — an expert apartment advisor helping a user review their search results and build a shortlist.
+  const listingIndex = scoredListings
+    .map((s, i) => {
+      const aqi = s.listing.air_quality_aqi_value;
+      const aqiCode = s.listing.air_quality_aqi_index_code;
+      const aqiLabel =
+        aqi != null
+          ? "AQI=" +
+            String(aqi) +
+            (aqiCode ? " idx=" + String(aqiCode) : "") +
+            (s.listing.air_quality_aqi_category_en
+              ? " (" + s.listing.air_quality_aqi_category_en + ")"
+              : s.listing.air_quality_aqi_category
+                ? " (" + s.listing.air_quality_aqi_category + ")"
+                : "")
+          : "AQI=n/a";
+      const sun =
+        s.listing.sunlight_score != null
+          ? "sun=" + String(s.listing.sunlight_score)
+          : "sun=n/a";
+      const rain =
+        s.listing.weather_next12h_rain_hours != null
+          ? "rain12h=" + String(s.listing.weather_next12h_rain_hours) + "h"
+          : "rain12h=n/a";
+      return (
+        "[" +
+        String(i + 1) +
+        "] id=" +
+        s.listing.id +
+        ' | "' +
+        (s.listing.title ?? "Untitled") +
+        '" | ' +
+        (s.listing.district ?? s.listing.city ?? "?") +
+        " | " +
+        (s.listing.rent_pln != null ? String(s.listing.rent_pln) + " PLN/mo" : "?") +
+        " | " +
+        String(s.listing.rooms ?? "?") +
+        "R " +
+        String(s.listing.area_m2 ?? "?") +
+        "m² | " +
+        aqiLabel +
+        " | " +
+        sun +
+        " | " +
+        rain +
+        " | " +
+        "score=" +
+        String(s.overallScore) +
+        " (" +
+        s.recommendation +
+        ")"
+      );
+    })
+    .join("\n");
 
-CURRENT SEARCH RESULTS (${scoredListings.length} listings):
-${listingContext}
+  const fullResultsJson =
+    scoredListings.length > 0
+      ? JSON.stringify(scoredListings, null, 2)
+      : "[]";
 
-YOUR CAPABILITIES:
-- Answer questions about listings: compare them, explain scores, give relocation advice
-- Use getListingDetails to fetch full specs for any listing
-- Use getListings to return the full list to the user
-- Use addToShortlist to save a listing — always confirm which listing before adding
-- Be concise and direct. Max 2-3 sentences + action.
-- When user says "add [title/number] to shortlist", call addToShortlist immediately.
-- When adding to shortlist, say which listing you're adding and why it's a good pick.`;
+  const systemPrompt = buildSearchAssistantSystemPrompt({
+    listingCount: scoredListings.length,
+    listingIndex: listingIndex || "No listings in this run.",
+    fullResultsJson,
+    englishRule: RESPOND_IN_ENGLISH_RULE,
+  });
 
   const result = streamText({
     model: openai("gpt-5.4-mini"),
     system: systemPrompt,
     messages: await convertToModelMessages(messages as Parameters<typeof convertToModelMessages>[0]),
     tools: {
+      searchFlats: {
+        description:
+          "Filter listings in the current search run using persisted listings_normalized fields (including enrichment). Use for refined shortlists by budget, rooms, district, geocode_required, etc.",
+        inputSchema: searchFlatsInputSchema,
+        execute: async (input) => execSearchFlats(supabase, flatCtx, input),
+      },
+      getFlatSearchCardData: {
+        description:
+          "Compact card: title, price, rooms, area, district, geocode summary, sunlight, AQI, rain hours, closest park/gym/grocery from proximity_matches, plus normalized picture URLs and photo-inspection notes when stored.",
+        inputSchema: z.object({ listing_id: z.string().uuid() }),
+        execute: async ({ listing_id }) => execGetFlatSearchCardData(supabase, flatCtx, listing_id),
+      },
+      getGeoData: {
+        description: "Geocode trust and coordinates for map UX. listing_id must be from current results.",
+        inputSchema: z.object({ listing_id: z.string().uuid() }),
+        execute: async ({ listing_id }) => execGetGeoData(supabase, flatCtx, listing_id),
+      },
+      getSunData: {
+        description: "Persisted sunlight score, confidence, orientation hint, reasons.",
+        inputSchema: z.object({ listing_id: z.string().uuid() }),
+        execute: async ({ listing_id }) => execGetSunData(supabase, flatCtx, listing_id),
+      },
+      getWeatherData: {
+        description: "Short-horizon weather snapshot and rain hours for the listing area.",
+        inputSchema: z.object({ listing_id: z.string().uuid() }),
+        execute: async ({ listing_id }) => execGetWeatherData(supabase, flatCtx, listing_id),
+      },
+      getAirQualityData: {
+        description:
+          "Persisted Google Air Quality API row: AQI value, index code, category, dominant pollutant — interpret value only with index code (uaqi vs local).",
+        inputSchema: z.object({ listing_id: z.string().uuid() }),
+        execute: async ({ listing_id }) => execGetAirQualityData(supabase, flatCtx, listing_id),
+      },
+      getPlacesNearby: {
+        description: "Park, gym, grocery from proximity_matches only (no live Places API).",
+        inputSchema: z.object({ listing_id: z.string().uuid() }),
+        execute: async ({ listing_id }) => execGetPlacesNearby(supabase, flatCtx, listing_id),
+      },
+      getSearchExplainability: {
+        description: "Compact signals for why a flat ranks well or poorly (geocode, sun, AQI, rain, proximity walk hints).",
+        inputSchema: z.object({ listing_id: z.string().uuid() }),
+        execute: async ({ listing_id }) => execGetSearchExplainability(supabase, flatCtx, listing_id),
+      },
+      getEnrichmentCoverage: {
+        description: "Status + timestamps for geocode, weather, air, sunlight, proximity — avoid overclaiming.",
+        inputSchema: z.object({ listing_id: z.string().uuid() }),
+        execute: async ({ listing_id }) => execGetEnrichmentCoverage(supabase, flatCtx, listing_id),
+      },
       getListings: {
-        description: "Return the full list of scored listings from this search run.",
+        description:
+          "Return every scored listing from this search run (same data as in context, including breakdown and reasoning).",
         inputSchema: z.object({}),
-        execute: async () => {
-          return scoredListings.map((s) => ({
-            id: s.listing.id,
-            title: s.listing.title,
-            district: s.listing.district,
-            rent_pln: s.listing.rent_pln,
-            rooms: s.listing.rooms,
-            area_m2: s.listing.area_m2,
-            overallScore: s.overallScore,
-            recommendation: s.recommendation,
-            reasoning: s.reasoning,
-          }));
-        },
+        execute: async () => scoredListings,
       },
       getListingDetails: {
-        description: "Fetch full details for a specific listing by its ID.",
+        description:
+          "Load complete database data for one listing: normalized row (with enrichment), AI score, listings_raw scrape when present. Only listing IDs from the current results.",
         inputSchema: z.object({
-          listing_id: z.string(),
+          listing_id: z.string().uuid(),
         }),
         execute: async ({ listing_id }) => {
-          const { data } = await supabase
+          if (!allowedListingIds.has(listing_id)) {
+            return {
+              error:
+                "That listing is not part of the current search results. Use ids from the INDEX above.",
+            };
+          }
+
+          const { data, error } = await supabase
             .from("listings_normalized")
-            .select("*")
+            .select(LISTING_WITH_ENRICHMENT_COLUMNS)
             .eq("id", listing_id)
             .single();
 
-          if (!data) return { error: "Listing not found" };
+          if (error || !data) {
+            return { error: error?.message ?? "Listing not found" };
+          }
 
-          const l = data as NormalizedListing;
+          const row = data as unknown as Record<string, unknown>;
+
+          const normalized = {
+            ...row,
+            district: firstLine(row.district as string | null),
+            address: firstLine(row.address as string | null),
+            area_m2:
+              row.area_m2 != null
+                ? parseFloat(String(row.area_m2)) || null
+                : null,
+            image_urls: parseFlatPicturesUrlColumn(row.flat_pictures_url),
+          };
+
+          const { data: rawScrape } = await supabase
+            .from("listings_raw")
+            .select("source, external_id, scraped_at, raw_data")
+            .eq("normalized_id", listing_id)
+            .order("scraped_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
           return {
-            id: l.id,
-            title: l.title,
-            source: l.source,
-            url: l.url,
-            city: l.city,
-            district: firstLine(l.district),
-            neighbourhood: l.neighbourhood,
-            address: firstLine(l.address),
-            rent_pln: l.rent_pln,
-            deposit_pln: l.deposit_pln,
-            total_monthly_pln: l.total_monthly_pln,
-            rooms: l.rooms,
-            area_m2: l.area_m2 != null ? parseFloat(String(l.area_m2)) || null : null,
-            floor: l.floor,
-            total_floors: l.total_floors,
-            building_type: l.building_type,
-            offer_type: l.offer_type,
-            is_furnished: l.is_furnished,
-            has_balcony: l.has_balcony,
-            has_terrace: l.has_terrace,
-            has_elevator: l.has_elevator,
-            has_storage_room: l.has_storage_room,
-            has_internet: l.has_internet,
-            heating_type: l.heating_type,
-            parking_type: l.parking_type,
-            kitchen_equipment: l.kitchen_equipment,
-            extra_features: l.extra_features,
-            available_from: l.available_from,
-            nearby: l.nearby,
-            score: scoredListings.find((s) => s.listing.id === listing_id),
+            normalized,
+            ai_score: scoredListings.find((s) => s.listing.id === listing_id) ?? null,
+            source_scrape: rawScrape ?? null,
           };
         },
       },
@@ -166,7 +266,10 @@ YOUR CAPABILITIES:
         },
       },
     },
-    stopWhen: stepCountIs(8),
+    stopWhen: stepCountIs(18),
+    providerOptions: {
+      openai: { parallelToolCalls: false },
+    },
   });
 
   return result.toUIMessageStreamResponse();

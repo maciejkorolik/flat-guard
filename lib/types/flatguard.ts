@@ -86,6 +86,12 @@ export interface DbProject {
   updated_at: string;
 }
 
+/** One line item from listings_normalized.fees JSONB */
+export interface ListingFeeRow {
+  fee_type?: string;
+  amount_pln?: number;
+}
+
 export interface NormalizedListing {
   id: string;
   source: string;
@@ -94,10 +100,13 @@ export interface NormalizedListing {
   title: string | null;
   description: string | null;
   is_active: boolean;
+  first_seen_at?: string | null;
+  last_seen_at?: string | null;
   city: string | null;
   district: string | null;
   neighbourhood: string | null;
   address: string | null;
+  /** Same as geocode_lat/geocode_lng after normalizeListingFromDb (remote has no separate lat/lng columns). */
   lat: number | null;
   lng: number | null;
   area_m2: number | null;
@@ -106,8 +115,11 @@ export interface NormalizedListing {
   total_floors: number | null;
   building_type: string | null;
   offer_type: string | null;
+  has_provision?: boolean | null;
+  provision_total_pln?: number | null;
   rent_pln: number | null;
   deposit_pln: number | null;
+  fees?: ListingFeeRow[] | null;
   total_monthly_pln: number | null;
   available_from: string | null;
   has_balcony: boolean | null;
@@ -116,11 +128,43 @@ export interface NormalizedListing {
   has_storage_room: boolean | null;
   is_furnished: boolean | null;
   has_internet: boolean | null;
+  has_tv?: boolean | null;
   heating_type: string | null;
   parking_type: string | null;
   kitchen_equipment: string[] | null;
+  bathroom_features?: string[] | null;
+  living_room_features?: string[] | null;
   extra_features: string[] | null;
   nearby: Record<string, unknown> | null;
+  /** Comma-separated image URLs from listings_normalized.flat_pictures_url (parsed into image_urls in normalizeListingFromDb). */
+  flat_pictures_url?: string | null;
+  /** AI/visual inspection text from listings_normalized.flat_description_pictures (for assistants, not UI thumbnails). */
+  flat_description_pictures?: string | null;
+  /** Parsed from flat_pictures_url for cards and detail gallery. */
+  image_urls?: string[];
+
+  /** Persisted enrichment (remote listings_normalized) — optional until backfilled. */
+  geocode_status?: string | null;
+  geocode_formatted_address?: string | null;
+  geocode_lat?: number | null;
+  geocode_lng?: number | null;
+  geocode_partial_match?: boolean | null;
+  weather_status?: string | null;
+  weather_condition_text?: string | null;
+  weather_temperature_c?: number | null;
+  weather_next12h_rain_hours?: number | null;
+  weather_next12h_max_precip_probability_percent?: number | null;
+  air_quality_status?: string | null;
+  /** Index code from the air-quality provider (e.g. uaqi, caqi, usa_epa, pol_gios). Required to interpret air_quality_aqi_value. */
+  air_quality_aqi_index_code?: string | null;
+  air_quality_aqi_display_name?: string | null;
+  air_quality_aqi_value?: number | null;
+  air_quality_aqi_category?: string | null;
+  sunlight_status?: string | null;
+  sunlight_score?: number | null;
+  sunlight_confidence?: string | null;
+  proximity_matches?: unknown | null;
+  proximity_fetched_at?: string | null;
 }
 
 export interface ScoreBreakdown {
@@ -136,7 +180,26 @@ export interface ScoredListing {
     "lat" | "lng" |
     "has_balcony" | "has_elevator" | "is_furnished" | "parking_type" |
     "heating_type" | "offer_type" | "extra_features" | "available_from"
-  >;
+  > & {
+    /** Merged from DB for chat; numeric AQI direction depends on air_quality_aqi_index_code. */
+    air_quality_aqi_index_code?: string | null;
+    air_quality_aqi_display_name?: string | null;
+    air_quality_aqi_value?: number | null;
+    air_quality_aqi_category?: string | null;
+    air_quality_aqi_category_en?: string | null;
+    sunlight_score?: number | null;
+    sunlight_confidence?: string | null;
+    weather_next12h_rain_hours?: number | null;
+    geocode_status?: string | null;
+    geocode_lat?: number | null;
+    geocode_lng?: number | null;
+    geocode_formatted_address?: string | null;
+    /** Copied from normalized listing (geocode-backed). */
+    lat?: number | null;
+    lng?: number | null;
+    image_urls?: string[];
+    flat_description_pictures?: string | null;
+  };
   overallScore: number;
   breakdown: ScoreBreakdown[];
   reasoning: string;

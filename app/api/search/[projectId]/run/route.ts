@@ -1,8 +1,10 @@
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeListingFromDb } from "@/lib/listing-normalize";
 import { z } from "zod";
 import type { NormalizedListing, ScoredListing } from "@/lib/types/flatguard";
+import { RESPOND_IN_ENGLISH_RULE } from "@/lib/ai-language-policy";
 
 const CITY_NAME_MAP: Record<string, string> = {
   warsaw: "Warszawa",
@@ -18,9 +20,13 @@ function normalizeCity(input: string): string {
   return CITY_NAME_MAP[input.toLowerCase()] ?? input;
 }
 
-function firstLine(value: string | null): string | null {
-  if (!value) return null;
-  return value.split("\n")[0].trim() || null;
+const PHOTO_INSPECTION_CONTEXT_MAX = 3500;
+
+function truncatePhotoInspection(text: string | null | undefined): string | null {
+  if (text == null || !String(text).trim()) return null;
+  const t = String(text).trim();
+  if (t.length <= PHOTO_INSPECTION_CONTEXT_MAX) return t;
+  return t.slice(0, PHOTO_INSPECTION_CONTEXT_MAX) + "…";
 }
 
 const scoringSchema = z.object({
@@ -88,12 +94,9 @@ export async function POST(
     return new Response("No listings found", { status: 404 });
   }
 
-  const listings: NormalizedListing[] = (rawListings as NormalizedListing[]).map((l) => ({
-    ...l,
-    district: firstLine(l.district),
-    address: firstLine(l.address),
-    area_m2: l.area_m2 != null ? parseFloat(String(l.area_m2)) || null : null,
-  }));
+  const listings: NormalizedListing[] = (rawListings as NormalizedListing[]).map((l) =>
+    normalizeListingFromDb(l)
+  );
 
   // Build profile summary
   const preferredCities = profile?.preferred_cities as string[] | null;
@@ -120,6 +123,7 @@ export async function POST(
   const stream = new ReadableStream({
     async start(controller) {
       for (const listing of listings) {
+        const photoInspectionSnippet = truncatePhotoInspection(listing.flat_description_pictures);
         const listingDesc = [
           listing.title ? `Title: ${listing.title}` : null,
           listing.district ? `District: ${listing.district}` : null,
@@ -135,9 +139,53 @@ export async function POST(
           listing.heating_type ? `Heating: ${listing.heating_type}` : null,
           listing.parking_type ? `Parking: ${listing.parking_type}` : null,
           listing.extra_features?.length ? `Extras: ${listing.extra_features.join(", ")}` : null,
+          listing.sunlight_score != null ? `Sunlight score (enrichment): ${listing.sunlight_score}` : null,
+          listing.air_quality_aqi_value != null
+            ? `Air quality (Google API snapshot): AQI ${listing.air_quality_aqi_value}` +
+                (listing.air_quality_aqi_index_code
+                  ? ` index=${listing.air_quality_aqi_index_code}`
+                  : "") +
+                (listing.air_quality_aqi_category ? ` (${listing.air_quality_aqi_category})` : "")
+            : null,
+          listing.weather_next12h_rain_hours != null
+            ? `Rainy hours next 12h (enrichment): ${listing.weather_next12h_rain_hours}`
+            : null,
+          listing.geocode_status ? `Geocode status (enrichment): ${listing.geocode_status}` : null,
+          listing.image_urls?.length
+            ? `Photos: ${listing.image_urls.length} image URL(s) on file (normalized listing).`
+            : null,
+          photoInspectionSnippet
+            ? `Photo inspection notes (from normalized DB, may be truncated):\n${photoInspectionSnippet}`
+            : null,
         ]
           .filter(Boolean)
           .join("\n");
+
+        const listingPayload = {
+          id: listing.id,
+          title: listing.title,
+          city: listing.city,
+          district: listing.district,
+          address: listing.address,
+          url: listing.url,
+          rent_pln: listing.rent_pln,
+          total_monthly_pln: listing.total_monthly_pln,
+          rooms: listing.rooms,
+          area_m2: listing.area_m2,
+          floor: listing.floor,
+          lat: listing.lat,
+          lng: listing.lng,
+          has_balcony: listing.has_balcony,
+          has_elevator: listing.has_elevator,
+          is_furnished: listing.is_furnished,
+          parking_type: listing.parking_type,
+          heating_type: listing.heating_type,
+          offer_type: listing.offer_type,
+          extra_features: listing.extra_features,
+          available_from: listing.available_from,
+          image_urls: listing.image_urls,
+          flat_description_pictures: listing.flat_description_pictures ?? null,
+        };
 
         try {
           const { object } = await generateObject({
@@ -148,34 +196,14 @@ Score 0–100. Provide 3–5 breakdown criteria (Budget Fit, Size, Location, Fea
 Recommendation: "strong" ≥80, "good" 60–79, "weak" <60.
 
 USER PROFILE:
-${profileSummary}`,
+${profileSummary}
+
+${RESPOND_IN_ENGLISH_RULE}`,
             prompt: `Score this listing:\n\n${listingDesc}`,
           });
 
           const scored: ScoredListing = {
-            listing: {
-              id: listing.id,
-              title: listing.title,
-              city: listing.city,
-              district: listing.district,
-              address: listing.address,
-              url: listing.url,
-              rent_pln: listing.rent_pln,
-              total_monthly_pln: listing.total_monthly_pln,
-              rooms: listing.rooms,
-              area_m2: listing.area_m2,
-              floor: listing.floor,
-              lat: listing.lat,
-              lng: listing.lng,
-              has_balcony: listing.has_balcony,
-              has_elevator: listing.has_elevator,
-              is_furnished: listing.is_furnished,
-              parking_type: listing.parking_type,
-              heating_type: listing.heating_type,
-              offer_type: listing.offer_type,
-              extra_features: listing.extra_features,
-              available_from: listing.available_from,
-            },
+            listing: listingPayload,
             overallScore: object.overallScore,
             breakdown: object.breakdown,
             reasoning: object.reasoning,
@@ -186,7 +214,23 @@ ${profileSummary}`,
             encoder.encode(`data: ${JSON.stringify(scored)}\n\n`)
           );
         } catch {
-          // Skip failed listings silently
+          const scored: ScoredListing = {
+            listing: listingPayload,
+            overallScore: 0,
+            breakdown: [
+              {
+                criterion: "Scoring",
+                score: 0,
+                note: "Automatic AI scoring failed for this listing; use getListingDetails for full data.",
+              },
+            ],
+            reasoning:
+              "We could not complete AI scoring for this listing. The assistant can still read full database details via tools.",
+            recommendation: "weak",
+          };
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(scored)}\n\n`)
+          );
         }
       }
 

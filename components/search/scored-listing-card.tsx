@@ -1,8 +1,10 @@
+import { useState } from "react";
 import type { NormalizedListing, ScoredListing } from "@/lib/types/flatguard";
 import { MatchScore } from "./match-score";
 import { SourceBadge } from "./source-badge";
 import { MapPin, Calendar, Zap, CheckCircle, XCircle, Bookmark, BookmarkCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ListingEnrichmentChips, listingHasEnrichmentChips } from "./listing-enrichment-chips";
 
 interface ScoredListingCardProps {
   listing: NormalizedListing;
@@ -50,13 +52,28 @@ export function ScoredListingCard({
   const reasoning = scored?.reasoning;
   const recommendation = scored?.recommendation ?? "good";
   const rec = RECOMMENDATION_CONFIG[recommendation];
+  const thumb = listing.image_urls?.[0];
+  const [thumbFailed, setThumbFailed] = useState(false);
 
   return (
     <div
-      className="bg-white border border-[rgba(198,197,212,0.15)] rounded-2xl shadow-sm overflow-hidden shrink-0 animate-fade-slide-in"
+      className="bg-white border border-slate-200/90 rounded-2xl shadow-[0_4px_6px_-1px_rgba(15,23,42,0.07),0_12px_24px_-8px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.035] overflow-hidden shrink-0 animate-fade-slide-in hover:shadow-[0_8px_12px_-2px_rgba(15,23,42,0.08),0_18px_32px_-10px_rgba(15,23,42,0.14)] transition-shadow duration-200"
       style={{ animationDelay: `${animationDelay}ms`, animationFillMode: "both" }}
     >
       <div className="flex">
+        {thumb && !thumbFailed && (
+          <div className="relative w-28 shrink-0 min-h-[140px] hidden sm:block bg-[#f1f5f9]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={thumb}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={() => setThumbFailed(true)}
+            />
+          </div>
+        )}
         {/* Left: listing info */}
         <div className="flex-1 p-5 flex flex-col gap-3 min-w-0">
           {/* Header row */}
@@ -127,25 +144,46 @@ export function ScoredListingCard({
             )}
           </div>
 
-          {/* Breakdown chips or skeleton */}
+          <ListingEnrichmentChips listing={listing} />
+
+          {/* AI criterion scores — separate from environment / geo chips above */}
           {isPending ? (
-            <div className="flex gap-2">
+            <div
+              className={cn(
+                "flex gap-2",
+                listingHasEnrichmentChips(listing) && "pt-2.5 mt-1 border-t border-dashed border-[rgba(198,197,212,0.25)]"
+              )}
+            >
+              <span className="sr-only">Scoring criteria</span>
               {[80, 64, 72].map((w) => (
                 <div key={w} className="h-5 rounded-full bg-[#f1f5f9] animate-pulse" style={{ width: w }} />
               ))}
             </div>
           ) : breakdown.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {breakdown.map((item) => (
-                <div
-                  key={item.criterion}
-                  className={cn("flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold", criterionColor(item.criterion))}
-                  title={item.note}
-                >
-                  <span>{item.criterion}</span>
-                  <span className="font-bold">{item.score}/10</span>
-                </div>
-              ))}
+            <div
+              className={cn(
+                "flex flex-col gap-1.5",
+                listingHasEnrichmentChips(listing) && "pt-2.5 mt-1 border-t border-dashed border-[rgba(198,197,212,0.25)]"
+              )}
+            >
+              <span className="text-[9px] font-bold uppercase tracking-widest text-[#767683] w-full">
+                Match to your profile
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {breakdown.map((item) => (
+                  <div
+                    key={item.criterion}
+                    className={cn(
+                      "flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold",
+                      criterionColor(item.criterion)
+                    )}
+                    title={item.note}
+                  >
+                    <span>{item.criterion}</span>
+                    <span className="font-bold">{item.score}/10</span>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : null}
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeListingFromDb } from "@/lib/listing-normalize";
 import type { NormalizedListing } from "@/lib/types/flatguard";
 
 const CITY_NAME_MAP: Record<string, string> = {
@@ -14,11 +15,6 @@ const CITY_NAME_MAP: Record<string, string> = {
 
 function normalizeCity(input: string): string {
   return CITY_NAME_MAP[input.toLowerCase()] ?? input;
-}
-
-function firstLine(value: string | null): string | null {
-  if (!value) return null;
-  return value.split("\n")[0].trim() || null;
 }
 
 export async function GET(
@@ -58,7 +54,7 @@ export async function GET(
     .select("*")
     .eq("is_active", true)
     .lt("rent_pln", 20000)
-    .limit(10);
+    .limit(20);
 
   if (dbCity) query = query.ilike("city", `%${dbCity}%`);
   if (budget) query = query.lte("total_monthly_pln", Math.round(budget * 1.3));
@@ -66,12 +62,9 @@ export async function GET(
   const { data: rawListings, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const listings: NormalizedListing[] = (rawListings ?? []).map((l: NormalizedListing) => ({
-    ...l,
-    district: firstLine(l.district),
-    address: firstLine(l.address),
-    area_m2: l.area_m2 != null ? parseFloat(String(l.area_m2)) || null : null,
-  }));
+  const listings: NormalizedListing[] = (rawListings ?? []).map((l: NormalizedListing) =>
+    normalizeListingFromDb(l)
+  );
 
   return NextResponse.json({ listings });
 }
