@@ -2,133 +2,100 @@
 
 ## Scope
 
-This branch is limited to **raw acquisition** for rental listings in the Wroclaw city area.
+This branch owns listing-source ingestion only.
 
-Generic raw contract reference:
+Required references:
 
+- [docs/database-schema-reference.md](/Users/bruno/Desktop/work/hackathon/docs/database-schema-reference.md)
 - [naive-schema.md](/Users/bruno/Desktop/work/hackathon/naive-schema.md)
 
-Do not implement:
+Out of scope:
 
-- normalization
-- ranking
+- project creation
+- interview storage
 - search profile logic
-- transformation logic
-- UI work
+- ranking
+- search run persistence
+- shortlist UX
 
-Those are separate tasks and should run later from Supabase or downstream jobs.
+## Target Schema
 
-## Chosen Method
+Scraping work must align to:
 
-Use **OLX rental search result pages** as the first proof-of-ingest source for Wroclaw.
+- `public.listings_raw`
+- `public.listings_normalized`
 
-Why this source:
+Do not build new work on `raw_ingest_runs` or `raw_rental_listings`.
 
-- public search pages are reachable without login
-- pagination is explicit with `?page=N`
-- card markup is server-rendered enough to parse reliably
-- search volume is well above the current target of 150 raw rows
+## Chosen Source
 
-Current target URL shape:
+Use OLX rental search results for Wroclaw as the first seeded source:
 
 ```text
 https://www.olx.pl/nieruchomosci/mieszkania/wynajem/q-mieszkania-wroclaw/
 https://www.olx.pl/nieruchomosci/mieszkania/wynajem/q-mieszkania-wroclaw/?page=2
 ```
 
+Why this source:
+
+- public listing pages
+- explicit pagination
+- server-rendered card markup
+- enough volume for demo seeding
+
 ## Extraction Strategy
 
-Collect only raw search-result facts for now.
+Collect the full raw crawler row and project only explicit facts.
 
-Minimum extracted fields per row:
+### Raw landing table
+
+Every source row must be insertable into `listings_raw` with:
 
 - `source`
-- `source_listing_id`
-- `source_url`
-- `search_url`
-- `search_city`
-- `search_page`
-- `position_on_page`
+- `external_id`
+- `raw_data`
+- `scraped_at`
+
+### Normalized projection
+
+Current OLX mapping should fill:
+
+- `source`
+- `external_id`
+- `url`
 - `title`
-- `price_amount`
-- `price_currency`
-- `location_label`
+- `description`
+- `is_active`
+- `first_seen_at`
+- `last_seen_at`
+- `city`
 - `district`
-- `street_hint`
+- `neighbourhood`
+- `address`
 - `area_m2`
 - `rooms`
-- `description_raw`
-- `image_urls_raw`
-- `seller_name_raw`
-- `seller_profile_url`
-- `seller_member_since_raw`
-- `seller_last_seen_raw`
-- `contact_phone_masked_raw`
-- `contact_phone_raw`
-- `contact_email_raw`
-- `is_promoted`
-- `scraped_at`
-- `raw_payload`
+- `floor`
+- `building_type`
+- `offer_type`
+- `rent_pln`
+- `fees`
+- `total_monthly_pln`
+- `has_elevator`
+- `is_furnished`
+- `parking_type`
 
-Recommended parser anchors from OLX HTML:
-
-- card root: `data-cy="l-card"`
-- title area: `data-cy="ad-card-title"`
-- pagination links: `?page=N`
-- listing links: `href="/d/oferta/..."`
-
-Raw payload should preserve the original text fragments used to derive typed columns.
-For future sources, keep the field set aligned with [naive-schema.md](/Users/bruno/Desktop/work/hackathon/naive-schema.md).
-
-Current OLX detail-page additions:
-
-- image gallery links
-- full description text
-- seller display name and profile URL
-- seller account age and last-seen text
-- masked phone text when exposed server-side
-- district breadcrumb id and label
-- finer location hints such as street or district names from explicit text
-- property parameter chips such as area, rooms, building type, furnished, floor, and additional rent
-
-## Storage Rules
-
-Persist into Postgres with strong typing at the raw layer.
-
-Requirements:
-
-- append-only ingest runs
-- typed raw listing table
-- one row per listing per ingest run
-- unique key on `(source, source_listing_id, ingest_run_id)`
-- raw source fragment stored as `jsonb`
-- source-specific enums and run status enums
-
-Normalization is intentionally out of scope for this branch.
+Leave null for fields without explicit source evidence.
 
 ## Operational Sequence
 
-1. Start a local Postgres instance.
-2. Apply the raw-ingest schema.
-3. Crawl paginated OLX Wroclaw rental pages until at least 150 rows are collected.
-4. Insert raw rows into Postgres.
-5. Record ingest-run metadata and counts.
+1. Crawl paginated OLX Wroclaw rental pages.
+2. Save source-specific JSONL and CSV in `data/raw/`.
+3. Load each crawler row into `public.listings_raw`.
+4. Project explicit typed values into `public.listings_normalized`.
+5. Update `listings_raw.normalized_id` to the linked normalized row.
+6. Verify row counts and nullability against the schema reference.
 
 ## Local Commands
-
-Initialize and start Postgres locally:
-
-```bash
-initdb --locale=C -E UTF8 -D .postgres-data
-pg_ctl -D .postgres-data -l .postgres-data/server.log -o "-k /Users/bruno/Desktop/work/hackathon/.postgres-data -p 55432" start
-createdb -h 127.0.0.1 -p 55432 flatguard_raw
-```
-
-Apply schema:
-
-```bash
-psql -h 127.0.0.1 -p 55432 -d flatguard_raw -f supabase/migrations/20260328123500_raw_ingest.sql
-```
 
 Run crawl:
 
@@ -136,24 +103,19 @@ Run crawl:
 node scripts/crawl-olx-wroclaw-raw.mjs --target 150 --max-pages 10 --delay-ms 900
 ```
 
-Load the latest JSONL into typed raw tables:
+Load JSONL into the current listing tables:
 
 ```bash
-psql -h 127.0.0.1 -p 55432 -d flatguard_raw -v jsonl_path=/absolute/path/to/data/raw/olx_wroclaw_rentals_raw_<timestamp>.jsonl -f supabase/sql/load_olx_raw_jsonl.sql
+psql "$SUPABASE_DB_URL" \
+  -v jsonl_path=/absolute/path/to/data/raw/olx_wroclaw_rentals_raw_<timestamp>.jsonl \
+  -f supabase/sql/load_olx_raw_jsonl.sql
 ```
 
 ## Exit Criteria
 
-This branch is successful when:
+This path is complete when:
 
-- at least 150 Wroclaw rental raw rows are captured
-- rows are stored in local Postgres
-- raw table columns are strongly typed
-- normalization remains unimplemented
-
-## Notes
-
-- Expect duplicated or cross-posted listings across portals in later sources.
-- Some cards may point to external domains; keep `source_url` and `raw_payload` so filtering decisions can happen later.
-- Contact details are not required at the search-result stage.
-- For OLX SSR pages, tested detail pages exposed masked phone text such as `xxx xxx xxx`, but not a clear phone number or email address.
+- checked-in crawl artifacts remain usable as source records
+- loader SQL targets `listings_raw` and `listings_normalized`
+- docs describe the current schema exactly
+- no active instructions direct new work toward the old experimental raw tables

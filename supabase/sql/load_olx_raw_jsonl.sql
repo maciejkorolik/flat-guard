@@ -1,7 +1,7 @@
 \set ON_ERROR_STOP on
 
--- Loader for OLX JSONL records mapped into the generic raw contract in:
--- /Users/bruno/Desktop/work/hackathon/naive-schema.md
+-- Loader for OLX crawler JSONL into the current production-facing listing tables:
+-- /Users/bruno/Desktop/work/hackathon/docs/database-schema-reference.md
 
 create temporary table if not exists temp_raw_json_lines (
   line_number bigserial primary key,
@@ -18,173 +18,219 @@ with parsed as (
     line::jsonb as j
   from temp_raw_json_lines
 ),
-upsert_run as (
-  insert into public.raw_ingest_runs (
-    id,
+projected as (
+  select
+    p.line_number,
+    coalesce(nullif(p.j ->> 'source', ''), 'olx') as source,
+    coalesce(
+      nullif(p.j ->> 'listing_id', ''),
+      md5(coalesce(p.j ->> 'listing_url', p.j::text))
+    ) as external_id,
+    nullif(split_part(p.j ->> 'listing_url', '?', 1), '') as url,
+    nullif(p.j ->> 'title_raw', '') as title,
+    nullif(p.j ->> 'description_raw', '') as description,
+    coalesce((p.j ->> 'scraped_at_utc')::timestamptz, now()) as scraped_at,
+    case
+      when coalesce(p.j ->> 'area_served_raw', '') ilike 'wrocław%' then 'Wrocław'
+      when coalesce(p.j ->> 'area_served_raw', '') ilike 'wroclaw%' then 'Wrocław'
+      when coalesce(p.j ->> 'city_query', '') <> '' then initcap(p.j ->> 'city_query')
+      else null
+    end as city,
+    coalesce(
+      nullif(p.j ->> 'district_breadcrumb_raw', ''),
+      nullif(
+        btrim(split_part(split_part(coalesce(p.j ->> 'area_served_raw', ''), ',', 2), '-', 1)),
+        ''
+      )
+    ) as district,
+    nullif(p.j ->> 'district_hint_raw', '') as neighbourhood,
+    nullif(p.j ->> 'street_hint_raw', '') as address,
+    nullif(p.j ->> 'area_m2_detail_raw', '')::numeric as area_m2,
+    nullif(p.j ->> 'rooms_detail_raw', '')::integer as rooms,
+    case
+      when nullif(regexp_replace(coalesce(p.j ->> 'floor_raw', ''), '[^0-9-]', '', 'g'), '') is null then null
+      else nullif(regexp_replace(coalesce(p.j ->> 'floor_raw', ''), '[^0-9-]', '', 'g'), '')::integer
+    end as floor,
+    nullif(p.j ->> 'building_type_raw', '') as building_type,
+    'rent'::text as offer_type,
+    nullif(p.j ->> 'price_numeric_raw', '')::integer as rent_pln,
+    case
+      when nullif(p.j ->> 'additional_rent_raw', '') is null then null
+      else jsonb_build_object(
+        'administrative_rent_pln',
+        (p.j ->> 'additional_rent_raw')::integer
+      )
+    end as fees,
+    case
+      when nullif(p.j ->> 'price_numeric_raw', '') is null then null
+      when nullif(p.j ->> 'additional_rent_raw', '') is null then (p.j ->> 'price_numeric_raw')::integer
+      else ((p.j ->> 'price_numeric_raw')::integer + (p.j ->> 'additional_rent_raw')::integer)
+    end as total_monthly_pln,
+    case lower(coalesce(p.j ->> 'elevator_raw', ''))
+      when 'tak' then true
+      when 'yes' then true
+      when 'nie' then false
+      when 'no' then false
+      else null
+    end as has_elevator,
+    case lower(coalesce(p.j ->> 'furnished_raw', ''))
+      when 'tak' then true
+      when 'yes' then true
+      when 'nie' then false
+      when 'no' then false
+      else null
+    end as is_furnished,
+    nullif(p.j ->> 'parking_raw', '') as parking_type,
+    p.j as raw_data
+  from parsed p
+),
+deduped as (
+  select distinct on (source, external_id)
     source,
-    search_city,
-    search_region,
-    search_url,
-    started_at,
-    completed_at,
-    status,
-    requested_target_count,
-    pages_fetched,
-    listings_seen,
-    listings_inserted,
-    runner_version,
-    notes
+    external_id,
+    url,
+    title,
+    description,
+    scraped_at,
+    city,
+    district,
+    neighbourhood,
+    address,
+    area_m2,
+    rooms,
+    floor,
+    building_type,
+    offer_type,
+    rent_pln,
+    fees,
+    total_monthly_pln,
+    has_elevator,
+    is_furnished,
+    parking_type
+  from projected
+  order by source, external_id, scraped_at desc, line_number desc
+),
+updated as (
+  update public.listings_normalized ln
+  set
+    url = coalesce(d.url, ln.url),
+    title = coalesce(d.title, ln.title),
+    description = coalesce(d.description, ln.description),
+    is_active = true,
+    first_seen_at = case
+      when ln.first_seen_at is null then d.scraped_at
+      when d.scraped_at < ln.first_seen_at then d.scraped_at
+      else ln.first_seen_at
+    end,
+    last_seen_at = case
+      when ln.last_seen_at is null then d.scraped_at
+      when d.scraped_at > ln.last_seen_at then d.scraped_at
+      else ln.last_seen_at
+    end,
+    city = coalesce(d.city, ln.city),
+    district = coalesce(d.district, ln.district),
+    neighbourhood = coalesce(d.neighbourhood, ln.neighbourhood),
+    address = coalesce(d.address, ln.address),
+    area_m2 = coalesce(d.area_m2, ln.area_m2),
+    rooms = coalesce(d.rooms, ln.rooms),
+    floor = coalesce(d.floor, ln.floor),
+    building_type = coalesce(d.building_type, ln.building_type),
+    offer_type = coalesce(d.offer_type, ln.offer_type),
+    rent_pln = coalesce(d.rent_pln, ln.rent_pln),
+    fees = coalesce(d.fees, ln.fees),
+    total_monthly_pln = coalesce(d.total_monthly_pln, ln.total_monthly_pln),
+    has_elevator = coalesce(d.has_elevator, ln.has_elevator),
+    is_furnished = coalesce(d.is_furnished, ln.is_furnished),
+    parking_type = coalesce(d.parking_type, ln.parking_type)
+  from deduped d
+  where ln.source = d.source
+    and ln.external_id = d.external_id
+  returning ln.id, ln.source, ln.external_id
+),
+inserted as (
+  insert into public.listings_normalized (
+    source,
+    external_id,
+    url,
+    title,
+    description,
+    is_active,
+    first_seen_at,
+    last_seen_at,
+    city,
+    district,
+    neighbourhood,
+    address,
+    area_m2,
+    rooms,
+    floor,
+    building_type,
+    offer_type,
+    rent_pln,
+    fees,
+    total_monthly_pln,
+    has_elevator,
+    is_furnished,
+    parking_type
   )
   select
-    (array_agg((j ->> 'crawl_run_id')::uuid order by line_number))[1] as id,
-    'olx'::public.listing_source,
-    min(j ->> 'city_query') as search_city,
-    'wroclaw'::text as search_region,
-    'https://www.olx.pl/nieruchomosci/mieszkania/wynajem/q-mieszkania-wroclaw/'::text as search_url,
-    min((j ->> 'scraped_at_utc')::timestamptz) as started_at,
-    max((j ->> 'scraped_at_utc')::timestamptz) as completed_at,
-    'completed'::public.ingest_run_status,
-    count(*)::integer as requested_target_count,
-    max((j ->> 'page_number')::integer) as pages_fetched,
-    count(*)::integer as listings_seen,
-    count(*)::integer as listings_inserted,
-    'scripts/crawl-olx-wroclaw-raw.mjs'::text as runner_version,
-    jsonb_build_object(
-      'input_file',
-      :'jsonl_path',
-      'loaded_at',
-      now()
-    ) as notes
-  from parsed
-  on conflict (id) do update
-    set completed_at = excluded.completed_at,
-        status = excluded.status,
-        requested_target_count = excluded.requested_target_count,
-        pages_fetched = excluded.pages_fetched,
-        listings_seen = excluded.listings_seen,
-        listings_inserted = excluded.listings_inserted,
-        runner_version = excluded.runner_version,
-        notes = public.raw_ingest_runs.notes || excluded.notes
-  returning id
+    d.source,
+    d.external_id,
+    d.url,
+    d.title,
+    d.description,
+    true,
+    d.scraped_at,
+    d.scraped_at,
+    d.city,
+    d.district,
+    d.neighbourhood,
+    d.address,
+    d.area_m2,
+    d.rooms,
+    d.floor,
+    d.building_type,
+    d.offer_type,
+    d.rent_pln,
+    d.fees,
+    d.total_monthly_pln,
+    d.has_elevator,
+    d.is_furnished,
+    d.parking_type
+  from deduped d
+  where not exists (
+    select 1
+    from public.listings_normalized ln
+    where ln.source = d.source
+      and ln.external_id = d.external_id
+  )
+  returning id, source, external_id
 )
-insert into public.raw_rental_listings (
-  ingest_run_id,
+insert into public.listings_raw (
   source,
-  source_listing_id,
-  source_url,
-  search_url,
-  search_city,
-  search_region,
-  search_page,
-  position_on_page,
-  listing_title,
-  listing_price_amount,
-  listing_price_currency,
-  location_label,
-  district,
-  area_m2,
-  rooms,
-  detail_html_sha256,
-  description_raw,
-  image_urls_raw,
-  seller_name_raw,
-  seller_profile_url,
-  seller_member_since_raw,
-  seller_last_seen_raw,
-  source_business_type_raw,
-  contact_phone_masked_raw,
-  contact_phone_raw,
-  contact_email_raw,
-  contact_preference_raw,
-  exact_location_available_raw,
-  district_breadcrumb_raw,
-  district_breadcrumb_id_raw,
-  district_hint_raw,
-  street_hint_raw,
-  animals_raw,
-  elevator_raw,
-  parking_raw,
-  floor_raw,
-  furnished_raw,
-  building_type_raw,
-  area_m2_detail_raw,
-  rooms_detail_raw,
-  additional_rent_raw,
-  is_promoted,
+  external_id,
+  raw_data,
   scraped_at,
-  content_hash,
-  raw_payload,
-  raw_detail_payload
+  normalized_id
 )
 select
-  (select id from upsert_run),
-  'olx'::public.listing_source,
-  coalesce(
-    nullif(j ->> 'listing_id', ''),
-    md5(coalesce(j ->> 'listing_url', j::text))
-  ) as source_listing_id,
-  j ->> 'listing_url' as source_url,
-  case
-    when (j ->> 'page_number')::integer = 1 then
-      'https://www.olx.pl/nieruchomosci/mieszkania/wynajem/q-mieszkania-wroclaw/'
-    else
-      format(
-        'https://www.olx.pl/nieruchomosci/mieszkania/wynajem/q-mieszkania-wroclaw/?page=%s',
-        j ->> 'page_number'
-      )
-  end as search_url,
-  j ->> 'city_query' as search_city,
-  'wroclaw'::text as search_region,
-  (j ->> 'page_number')::integer as search_page,
-  row_number() over (
-    partition by (j ->> 'page_number')::integer
-    order by line_number
-  )::integer as position_on_page,
-  j ->> 'title_raw' as listing_title,
-  nullif(j ->> 'price_numeric_raw', '')::numeric(12, 2) as listing_price_amount,
-  nullif(upper(j ->> 'price_currency_raw'), '')::char(3) as listing_price_currency,
-  nullif(j ->> 'area_served_raw', '') as location_label,
-  case
-    when coalesce(j ->> 'district_breadcrumb_raw', '') <> '' then j ->> 'district_breadcrumb_raw'
-    when coalesce(j ->> 'district_hint_raw', '') <> '' then j ->> 'district_hint_raw'
-    when coalesce(j ->> 'area_served_raw', '') in ('Wrocław', 'wroclaw') then null
-    else nullif(j ->> 'area_served_raw', '')
-  end as district,
-  nullif(j ->> 'area_m2_detail_raw', '')::numeric(8, 2) as area_m2,
-  nullif(j ->> 'rooms_detail_raw', '')::numeric(4, 1) as rooms,
-  nullif(j ->> 'detail_html_sha256', '') as detail_html_sha256,
-  nullif(j ->> 'description_raw', '') as description_raw,
-  coalesce(j -> 'image_urls_raw', '[]'::jsonb) as image_urls_raw,
-  nullif(j ->> 'seller_name_raw', '') as seller_name_raw,
-  nullif(j ->> 'seller_profile_url', '') as seller_profile_url,
-  nullif(j ->> 'seller_member_since_raw', '') as seller_member_since_raw,
-  nullif(j ->> 'seller_last_seen_raw', '') as seller_last_seen_raw,
-  nullif(j ->> 'source_business_type_raw', '') as source_business_type_raw,
-  nullif(j ->> 'contact_phone_masked_raw', '') as contact_phone_masked_raw,
-  nullif(j ->> 'contact_phone_raw', '') as contact_phone_raw,
-  nullif(j ->> 'contact_email_raw', '') as contact_email_raw,
-  nullif(j ->> 'contact_preference_raw', '') as contact_preference_raw,
-  case
-    when j ? 'exact_location_available_raw' then (j ->> 'exact_location_available_raw')::boolean
-    else null
-  end as exact_location_available_raw,
-  nullif(j ->> 'district_breadcrumb_raw', '') as district_breadcrumb_raw,
-  nullif(j ->> 'district_breadcrumb_id_raw', '') as district_breadcrumb_id_raw,
-  nullif(j ->> 'district_hint_raw', '') as district_hint_raw,
-  nullif(j ->> 'street_hint_raw', '') as street_hint_raw,
-  nullif(j ->> 'animals_raw', '') as animals_raw,
-  nullif(j ->> 'elevator_raw', '') as elevator_raw,
-  nullif(j ->> 'parking_raw', '') as parking_raw,
-  nullif(j ->> 'floor_raw', '') as floor_raw,
-  nullif(j ->> 'furnished_raw', '') as furnished_raw,
-  nullif(j ->> 'building_type_raw', '') as building_type_raw,
-  nullif(j ->> 'area_m2_detail_raw', '')::numeric(8, 2) as area_m2_detail_raw,
-  nullif(j ->> 'rooms_detail_raw', '')::numeric(4, 1) as rooms_detail_raw,
-  nullif(j ->> 'additional_rent_raw', '')::numeric(12, 2) as additional_rent_raw,
-  coalesce((j -> 'raw_offer_json' ->> 'promoted')::boolean, false) as is_promoted,
-  (j ->> 'scraped_at_utc')::timestamptz as scraped_at,
-  md5(j::text) as content_hash,
-  jsonb_build_object('crawler_record', j) as raw_payload,
-  coalesce(j -> 'raw_detail_json', '{}'::jsonb) as raw_detail_payload
-from parsed
-on conflict (source, source_listing_id, ingest_run_id) do nothing;
+  p.source,
+  p.external_id,
+  p.raw_data,
+  p.scraped_at,
+  coalesce(u.id, i.id, resolved.id)
+from projected p
+left join updated u
+  on u.source = p.source
+ and u.external_id = p.external_id
+left join inserted i
+  on i.source = p.source
+ and i.external_id = p.external_id
+left join lateral (
+  select ln.id
+  from public.listings_normalized ln
+  where ln.source = p.source
+    and ln.external_id = p.external_id
+  order by ln.last_seen_at desc nulls last, ln.first_seen_at desc nulls last
+  limit 1
+) resolved on true;

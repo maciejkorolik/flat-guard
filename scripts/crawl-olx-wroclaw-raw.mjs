@@ -4,7 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 
-const SOURCE = "olx.pl";
+const SOURCE = "olx";
 const CITY = "wroclaw";
 const BASE_URL =
   "https://www.olx.pl/nieruchomosci/mieszkania/wynajem/q-mieszkania-wroclaw/";
@@ -51,6 +51,18 @@ function sha256(input) {
 function extractListingIdFromUrl(url) {
   const match = url.match(/-ID([A-Za-z0-9]+)\.html/i);
   return match ? match[1] : null;
+}
+
+function canonicalizeListingUrl(url) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    parsed.search = "";
+    parsed.hash = "";
+    return parsed.toString();
+  } catch {
+    return url.split("?")[0] || url;
+  }
 }
 
 function parseNumberOrNull(value) {
@@ -255,7 +267,8 @@ function parseRoomsOrNull(value) {
 }
 
 async function fetchListingDetail(listingUrl, delayMs) {
-  const html = await fetchHtml(listingUrl);
+  const canonicalListingUrl = canonicalizeListingUrl(listingUrl);
+  const html = await fetchHtml(canonicalListingUrl);
   if (delayMs > 0) {
     await sleep(delayMs);
   }
@@ -327,7 +340,9 @@ function parseListingCardsFromHtml(html) {
 
     const relUrl = firstMatch(chunk, /href="(\/d\/oferta\/[^"]+)"/i);
     if (!relUrl) continue;
-    const listingUrl = `https://www.olx.pl${decodeHtmlEntities(relUrl)}`;
+    const listingUrl = canonicalizeListingUrl(
+      `https://www.olx.pl${decodeHtmlEntities(relUrl)}`,
+    );
     const listingId = extractListingIdFromUrl(listingUrl);
     const titleFromAria = firstMatch(chunk, /aria-label="Obserwuj:\s*([^"]+)"/i);
     const titleFromTag = stripTags(firstMatch(chunk, /<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/i) || "");
@@ -365,7 +380,7 @@ function csvEscape(value) {
 }
 
 function buildRecord({ runId, pageNumber, offer, pageHtmlSha256, scrapedAt }) {
-  const listingUrl = offer.url || null;
+  const listingUrl = canonicalizeListingUrl(offer.url || null);
   const listingId = listingUrl ? extractListingIdFromUrl(listingUrl) : null;
   const areaServed = offer.areaServed?.name || null;
 
@@ -616,7 +631,7 @@ async function main() {
       const offers = offersFromJsonLd(jsonLd);
 
       for (const offer of offers) {
-        const listingUrl = offer?.url;
+        const listingUrl = canonicalizeListingUrl(offer?.url);
         if (!listingUrl || seen.has(listingUrl)) continue;
         seen.add(listingUrl);
         records.push(
