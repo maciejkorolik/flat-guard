@@ -40,7 +40,7 @@ Current scope:
 
 What the enrichment runner actually does:
 
-1. Reads raw OLX listings either from checked-in JSONL or from `raw_rental_listings` in Supabase.
+1. Reads raw OLX listings either from checked-in JSONL or from live `listings_raw` rows in Supabase.
 2. Builds a strict geocode query from `street + district + city`.
 3. Resolves coordinates with Google Geocoding or marks the row as `insufficient_input`, `zero_results`, or `failed`.
 4. Fetches short-horizon weather and air-quality snapshots for successfully geocoded listings.
@@ -53,19 +53,23 @@ Stored outputs:
 - `enrichment_runs` records batch metadata, requested categories, counts, and run status.
 - `listing_enrichments` stores geocode, weather, air quality, and sunlight results per listing.
 - `listing_proximity_matches` stores the best winning place per category, ranked by walking travel time.
+- `listings_normalized` should also carry the latest search-facing enrichment summary columns so shortlist and ranking logic do not need to join the run tables for every view.
 - `data/enriched/*.jsonl`, `*.csv`, and `*.meta.json` provide local inspection/export artifacts when file writes are enabled.
 
 Current limitations:
 
 - no long-term rainfall climatology or annual pollution history yet
 - no precise apartment-facing orientation unless explicitly stated in the source listing
-- no transit-aware or bike-accessibility scoring yet
+- no traffic-aware drive-time, transit-aware, or bike-accessibility scoring yet
 - no route-level ranking or meetup-area optimization yet; this work is listing-level enrichment only
 
 Primary files:
 
 - [20260328153000_listing_enrichments.sql](/Users/bruno/Desktop/work/hackathon/supabase/migrations/20260328153000_listing_enrichments.sql) — enrichment tables
+- [20260328170000_listings_normalized_enrichment_inputs.sql](/Users/bruno/Desktop/work/hackathon/supabase/migrations/20260328170000_listings_normalized_enrichment_inputs.sql) — normalized listing columns needed by the live enrichment flow
+- [20260328184500_listings_normalized_enrichment_outputs.sql](/Users/bruno/Desktop/work/hackathon/supabase/migrations/20260328184500_listings_normalized_enrichment_outputs.sql) — normalized listing columns for latest geocode, weather, air-quality, sunlight, and amenity proximity summaries
 - [enrich-rental-listings-google.mjs](/Users/bruno/Desktop/work/hackathon/scripts/enrich-rental-listings-google.mjs) — file/DB enrichment CLI
+- [validate-live-enrichment-readiness.mjs](/Users/bruno/Desktop/work/hackathon/scripts/validate-live-enrichment-readiness.mjs) — read-only live schema/sample validation
 - [data/enriched/README.md](/Users/bruno/Desktop/work/hackathon/data/enriched/README.md) — local output contract
 
 Run the sample file locally:
@@ -74,19 +78,25 @@ Run the sample file locally:
 pnpm enrich:sample -- --skip-db-writes
 ```
 
-The enrichment CLI auto-loads `.env.local` and `.env` from the current worktree and parent directories, so a repo-root `/Users/bruno/Desktop/work/hackathon/.env.local` is picked up from this `.dmux/worktrees/...` checkout.
-
-Run against DB rows for one ingest run:
+Validate the live Supabase schema and a 10-row `listings_raw` sample locally:
 
 ```bash
-node scripts/enrich-rental-listings-google.mjs --ingest-run-id <uuid> --category gym
+npm run validate:live-enrichment -- --limit 10
+```
+
+The enrichment CLI auto-loads `.env.local` and `.env` from the current worktree and parent directories, so a repo-root `/Users/bruno/Desktop/work/hackathon/.env.local` is picked up from this `.dmux/worktrees/...` checkout.
+
+Run against the latest DB rows:
+
+```bash
+node scripts/enrich-rental-listings-google.mjs --limit 10 --source olx.pl --category gym
 ```
 
 Environment required for enrichment:
 
 - `GOOGLE_MAPS_API_KEY`
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY` when reading from or writing to Supabase
+- `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SERVICE_KEY` when reading from or writing to Supabase
 
 Google Cloud setup required for enrichment:
 

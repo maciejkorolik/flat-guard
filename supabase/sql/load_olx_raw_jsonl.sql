@@ -29,6 +29,26 @@ projected as (
     nullif(split_part(p.j ->> 'listing_url', '?', 1), '') as url,
     nullif(p.j ->> 'title_raw', '') as title,
     nullif(p.j ->> 'description_raw', '') as description,
+    case
+      when jsonb_typeof(p.j -> 'exact_location_available_raw') = 'boolean'
+        then (p.j ->> 'exact_location_available_raw')::boolean
+      else null
+    end as exact_location_available,
+    case
+      when jsonb_typeof(p.j -> 'image_urls_raw') = 'array'
+        and jsonb_array_length(p.j -> 'image_urls_raw') > 0
+        then array(select jsonb_array_elements_text(p.j -> 'image_urls_raw'))
+      else null
+    end as image_urls,
+    nullif(p.j ->> 'source_business_type_raw', '') as source_business_type,
+    case
+      when jsonb_typeof(p.j -> 'raw_offer_json') = 'object' then p.j -> 'raw_offer_json'
+      else null
+    end as source_offer_payload,
+    case
+      when jsonb_typeof(p.j -> 'raw_detail_json') = 'object' then p.j -> 'raw_detail_json'
+      else null
+    end as source_detail_payload,
     coalesce((p.j ->> 'scraped_at_utc')::timestamptz, now()) as scraped_at,
     case
       when coalesce(p.j ->> 'area_served_raw', '') ilike 'wrocław%' then 'Wrocław'
@@ -91,6 +111,11 @@ deduped as (
     url,
     title,
     description,
+    exact_location_available,
+    image_urls,
+    source_business_type,
+    source_offer_payload,
+    source_detail_payload,
     scraped_at,
     city,
     district,
@@ -116,6 +141,11 @@ updated as (
     url = coalesce(d.url, ln.url),
     title = coalesce(d.title, ln.title),
     description = coalesce(d.description, ln.description),
+    exact_location_available = coalesce(d.exact_location_available, ln.exact_location_available),
+    image_urls = coalesce(d.image_urls, ln.image_urls),
+    source_business_type = coalesce(d.source_business_type, ln.source_business_type),
+    source_offer_payload = coalesce(d.source_offer_payload, ln.source_offer_payload),
+    source_detail_payload = coalesce(d.source_detail_payload, ln.source_detail_payload),
     is_active = true,
     first_seen_at = case
       when ln.first_seen_at is null then d.scraped_at
@@ -154,6 +184,11 @@ inserted as (
     url,
     title,
     description,
+    exact_location_available,
+    image_urls,
+    source_business_type,
+    source_offer_payload,
+    source_detail_payload,
     is_active,
     first_seen_at,
     last_seen_at,
@@ -179,6 +214,11 @@ inserted as (
     d.url,
     d.title,
     d.description,
+    d.exact_location_available,
+    d.image_urls,
+    d.source_business_type,
+    d.source_offer_payload,
+    d.source_detail_payload,
     true,
     d.scraped_at,
     d.scraped_at,

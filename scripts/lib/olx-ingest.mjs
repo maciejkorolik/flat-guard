@@ -9,6 +9,11 @@ export const NORMALIZED_OLX_COLUMNS = [
   "url",
   "title",
   "description",
+  "exact_location_available",
+  "image_urls",
+  "source_business_type",
+  "source_offer_payload",
+  "source_detail_payload",
   "city",
   "district",
   "neighbourhood",
@@ -32,6 +37,11 @@ export const ACTIVE_NORMALIZED_COLUMNS = [
   "url",
   "title",
   "description",
+  "exact_location_available",
+  "image_urls",
+  "source_business_type",
+  "source_offer_payload",
+  "source_detail_payload",
   "city",
   "district",
   "neighbourhood",
@@ -130,10 +140,36 @@ function parseBoolean(value) {
   if (raw === "tak" || raw === "yes") {
     return true;
   }
+  if (raw === "true") {
+    return true;
+  }
   if (raw === "nie" || raw === "no") {
     return false;
   }
+  if (raw === "false") {
+    return false;
+  }
   return null;
+}
+
+function parseStringArray(value) {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const items = value
+    .map((item) => nonEmptyString(item))
+    .filter(Boolean);
+
+  return items.length > 0 ? items : null;
+}
+
+function parseJsonObject(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  return Object.keys(value).length > 0 ? value : null;
 }
 
 function deriveCity(record) {
@@ -202,6 +238,11 @@ export function projectOlxRecord(record) {
     url: listingUrl,
     title: nonEmptyString(record.title_raw),
     description: nonEmptyString(record.description_raw),
+    exact_location_available: parseBoolean(record.exact_location_available_raw),
+    image_urls: parseStringArray(record.image_urls_raw),
+    source_business_type: nonEmptyString(record.source_business_type_raw),
+    source_offer_payload: parseJsonObject(record.raw_offer_json),
+    source_detail_payload: parseJsonObject(record.raw_detail_json),
     scraped_at: scrapedAt,
     city: deriveCity(record),
     district: deriveDistrict(record),

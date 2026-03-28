@@ -47,6 +47,11 @@ Scrapers or loaders may project into the following `public.listings_normalized` 
 | `url` | Canonical listing URL |
 | `title` | Listing title |
 | `description` | Listing description |
+| `exact_location_available` | Whether the source exposed precise location data |
+| `image_urls` | Source image URLs when explicit |
+| `source_business_type` | Source-side listing type or seller class |
+| `source_offer_payload` | Provider offer payload kept as structured JSON |
+| `source_detail_payload` | Provider detail payload kept as structured JSON |
 | `is_active` | Whether the listing is currently active at scrape time |
 | `first_seen_at` | First observed timestamp |
 | `last_seen_at` | Most recent observed timestamp |
@@ -92,6 +97,11 @@ The current OLX crawler emits source-specific JSONL. Loaders should map it like 
 | `listing_url` | `listings_normalized.url` |
 | `title_raw` | `listings_normalized.title` |
 | `description_raw` | `listings_normalized.description` |
+| `exact_location_available_raw` | `listings_normalized.exact_location_available` |
+| `image_urls_raw` | `listings_normalized.image_urls` |
+| `source_business_type_raw` | `listings_normalized.source_business_type` |
+| `raw_offer_json` | `listings_normalized.source_offer_payload` |
+| `raw_detail_json` | `listings_normalized.source_detail_payload` |
 | `area_m2_detail_raw` | `listings_normalized.area_m2` |
 | `rooms_detail_raw` | `listings_normalized.rooms` |
 | `floor_raw` | `listings_normalized.floor` |

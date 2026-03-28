@@ -8,10 +8,9 @@ import { enrichListing } from "../lib/enrichment/pipeline.mjs";
 import {
   buildListingEnrichmentRow,
   createTimestampTag,
-  fetchRawListingsByIngestRun,
+  fetchLatestRawListings,
   getSupabaseAdminClientFromEnv,
   insertEnrichmentRun,
-  lookupRawListingIds,
   readCrawlerJsonl,
   replaceProximityMatches,
   updateEnrichmentRun,
@@ -55,12 +54,13 @@ function loadLocalEnvFiles() {
 function parseArgs(argv) {
   const args = {
     inputFile: null,
-    ingestRunId: null,
     outDir: "data/enriched",
     categories: [],
     limit: null,
+    source: null,
     skipDbWrites: false,
     skipFileWrites: false,
+    deprecatedIngestRunId: null,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -74,7 +74,7 @@ function parseArgs(argv) {
     }
 
     if (arg === "--ingest-run-id" && next) {
-      args.ingestRunId = next;
+      args.deprecatedIngestRunId = next;
       index += 1;
       continue;
     }
@@ -93,6 +93,12 @@ function parseArgs(argv) {
 
     if (arg === "--limit" && next) {
       args.limit = Number(next);
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--source" && next) {
+      args.source = next;
       index += 1;
       continue;
     }
@@ -117,14 +123,14 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`Usage:
-  node scripts/enrich-rental-listings-google.mjs --input-file data/raw/<file>.jsonl [--ingest-run-id <uuid>] [--category gym] [--category "climbing gym"]
-  node scripts/enrich-rental-listings-google.mjs --ingest-run-id <uuid> [--category gym]
+  node scripts/enrich-rental-listings-google.mjs --input-file data/raw/<file>.jsonl [--category gym] [--category "climbing gym"]
+  node scripts/enrich-rental-listings-google.mjs --limit 10 [--source olx.pl] [--category gym]
 
 Options:
   --input-file <path>      Read crawler JSONL rows from disk.
-  --ingest-run-id <uuid>   Read raw rows from Supabase or map file rows back to a DB ingest run.
+  --limit <n>              Restrict the number of rows processed. Required in DB mode.
+  --source <value>         Filter DB mode to one listings_raw source value.
   --category <value>       Add curated or free-text proximity categories. Repeatable.
-  --limit <n>              Restrict the number of rows processed.
   --out-dir <path>         Directory for JSONL/CSV/meta outputs. Default: data/enriched
   --skip-db-writes         Do not create enrichment_runs or insert enrichment tables.
   --skip-file-writes       Do not emit JSONL/CSV/meta output files.
@@ -182,7 +188,13 @@ async function main() {
     loadLocalEnvFiles();
     const args = parseArgs(process.argv.slice(2));
 
-    if (args.help || (!args.inputFile && !args.ingestRunId)) {
+    if (args.deprecatedIngestRunId) {
+      throw new Error(
+        "--ingest-run-id is obsolete. Read from live listings_raw with --limit and optional --source instead.",
+      );
+    }
+
+    if (args.help || (!args.inputFile && !Number.isFinite(args.limit))) {
       printHelp();
       process.exit(args.help ? 0 : 1);
     }
@@ -196,7 +208,7 @@ async function main() {
 
     if (sourceMode === "db" && !supabase) {
       throw new Error(
-        "DB input mode requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+        "DB input mode requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_KEY.",
       );
     }
 
@@ -209,11 +221,10 @@ async function main() {
     const listings =
       sourceMode === "file"
         ? await readCrawlerJsonl(args.inputFile, args.limit)
-        : await fetchRawListingsByIngestRun(
-            supabase,
-            args.ingestRunId,
-            args.limit,
-          );
+        : await fetchLatestRawListings(supabase, {
+            limit: args.limit,
+            source: args.source,
+          });
 
     if (!listings.length) {
       throw new Error("No listings were found for enrichment.");
@@ -223,25 +234,17 @@ async function main() {
       `Enriching ${listings.length} listing(s) using ${categories.length} proximity categories...`,
     );
 
-    const dbRawIdMap =
-      writeToDb && args.ingestRunId
-        ? await lookupRawListingIds(
-            supabase,
-            args.ingestRunId,
-            listings.map((listing) => listing.sourceListingId),
-          )
-        : new Map();
-
     if (writeToDb) {
       enrichmentRun = await insertEnrichmentRun(supabase, {
         source_mode: sourceMode,
         status: "running",
         input_file: args.inputFile ? resolve(args.inputFile) : null,
-        input_ingest_run_id: args.ingestRunId,
         search_city: listings[0]?.searchCity || null,
         selected_categories: categories,
         requested_listing_count: listings.length,
         notes: {
+          input_limit: args.limit,
+          input_source: args.source,
           write_to_files: !args.skipFileWrites,
           write_to_db: writeToDb,
         },
@@ -281,7 +284,8 @@ async function main() {
         meta: {
           source_mode: sourceMode,
           input_file: args.inputFile ? resolve(args.inputFile) : null,
-          input_ingest_run_id: args.ingestRunId,
+          input_limit: args.limit,
+          input_source: args.source,
           listing_count: enrichments.length,
           failed_count: failedCount,
           requested_categories: args.categories,
@@ -295,9 +299,7 @@ async function main() {
         buildListingEnrichmentRow({
           enrichmentRunId: enrichmentRun.id,
           listing: enrichment.listing,
-          rawListingId:
-            dbRawIdMap.get(enrichment.listing.sourceListingId) ??
-            enrichment.listing.rawListingId,
+          rawListingId: enrichment.listing.rawListingId,
           geocode: enrichment.geocode,
           weather: enrichment.weather,
           airQuality: enrichment.airQuality,

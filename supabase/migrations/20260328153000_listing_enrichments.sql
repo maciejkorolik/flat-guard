@@ -78,7 +78,6 @@ create table if not exists public.enrichment_runs (
   source_mode public.enrichment_source_mode not null,
   status public.enrichment_run_status not null default 'running',
   input_file text,
-  input_ingest_run_id uuid references public.raw_ingest_runs(id) on delete set null,
   search_city text,
   selected_categories jsonb not null default '[]'::jsonb,
   notes jsonb not null default '{}'::jsonb,
@@ -97,15 +96,12 @@ create table if not exists public.enrichment_runs (
   check (completed_at is null or completed_at >= started_at)
 );
 
-create index if not exists enrichment_runs_input_ingest_run_idx
-  on public.enrichment_runs (input_ingest_run_id, started_at desc);
-
 create table if not exists public.listing_enrichments (
   id bigserial primary key,
   enrichment_run_id uuid not null references public.enrichment_runs(id) on delete cascade,
-  raw_listing_id bigint references public.raw_rental_listings(id) on delete set null,
-  ingest_run_id uuid references public.raw_ingest_runs(id) on delete set null,
-  source public.listing_source not null,
+  raw_listing_id uuid references public.listings_raw(id) on delete set null,
+  normalized_listing_id uuid references public.listings_normalized(id) on delete set null,
+  source text not null,
   source_listing_id text not null,
   source_url text not null,
   search_city text,
@@ -162,6 +158,9 @@ create unique index if not exists listing_enrichments_run_raw_listing_uidx
 
 create index if not exists listing_enrichments_raw_listing_idx
   on public.listing_enrichments (raw_listing_id);
+
+create index if not exists listing_enrichments_normalized_listing_idx
+  on public.listing_enrichments (normalized_listing_id);
 
 create index if not exists listing_enrichments_run_idx
   on public.listing_enrichments (enrichment_run_id);

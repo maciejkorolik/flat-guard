@@ -141,6 +141,11 @@ Important fields for the current OLX ingest:
 - descriptive:
   - `title`
   - `description`
+  - `exact_location_available`
+  - `image_urls`
+  - `source_business_type`
+  - `source_offer_payload`
+  - `source_detail_payload`
   - `is_active`
   - `first_seen_at`
   - `last_seen_at`
@@ -182,6 +187,42 @@ Important fields for the current OLX ingest:
   - `living_room_features`
   - `extra_features`
   - `nearby`
+- latest enrichment summary:
+  - `last_enrichment_run_id`
+  - `geocode_status`
+  - `geocode_provider`
+  - `geocode_query`
+  - `geocode_formatted_address`
+  - `geocode_place_id`
+  - `geocode_location_type`
+  - `geocode_result_types`
+  - `geocode_partial_match`
+  - `geocoded_at`
+  - `weather_status`
+  - `weather_summary_time`
+  - `weather_condition_type`
+  - `weather_condition_text`
+  - `weather_temperature_c`
+  - `weather_precipitation_probability_percent`
+  - `weather_next12h_rain_hours`
+  - `weather_next12h_max_precip_probability_percent`
+  - `weather_fetched_at`
+  - `air_quality_status`
+  - `air_quality_summary_time`
+  - `air_quality_aqi_index_code`
+  - `air_quality_aqi_display_name`
+  - `air_quality_aqi_value`
+  - `air_quality_aqi_category`
+  - `air_quality_dominant_pollutant`
+  - `air_quality_fetched_at`
+  - `sunlight_status`
+  - `sunlight_score`
+  - `sunlight_confidence`
+  - `sunlight_estimated_orientation_hint`
+  - `sunlight_reasons`
+  - `sunlight_fetched_at`
+  - `proximity_matches`
+  - `proximity_fetched_at`
 
 Rules:
 
@@ -209,6 +250,11 @@ Current crawler JSONL fields map as follows:
 - `url` <- canonicalized `listing_url`
 - `title` <- `title_raw`
 - `description` <- `description_raw`
+- `exact_location_available` <- `exact_location_available_raw`
+- `image_urls` <- `image_urls_raw`
+- `source_business_type` <- `source_business_type_raw`
+- `source_offer_payload` <- `raw_offer_json`
+- `source_detail_payload` <- `raw_detail_json`
 - `is_active` <- `true` for rows returned by a successful crawl
 - `first_seen_at` <- `scraped_at_utc`
 - `last_seen_at` <- `scraped_at_utc`
@@ -228,6 +274,7 @@ Current crawler JSONL fields map as follows:
 - `is_furnished` <- parsed from `furnished_raw`
 - `parking_type` <- `parking_raw`
 - `extra_features` <- optional text array for explicit source facts not modeled elsewhere
+- enrichment columns above <- written by the Google-backed enrichment flow after successful normalization and are nullable until enrichment runs
 
 Fields to leave null for the current OLX pipeline unless explicit extraction is added:
 
@@ -248,7 +295,12 @@ Fields to leave null for the current OLX pipeline unless explicit extraction is 
 - `kitchen_equipment`
 - `bathroom_features`
 - `living_room_features`
-- `nearby`
+
+Notes for enrichment outputs:
+
+- `rain` is represented by `weather_precipitation_probability_percent`, `weather_next12h_rain_hours`, and `weather_next12h_max_precip_probability_percent`
+- amenity proximity is represented by `proximity_matches`, which stores the winning place per requested category together with walking time and distance
+- current Google integration does not produce a dedicated traffic signal; it only computes walking route matrices for amenity proximity
 
 ## Current Status
 

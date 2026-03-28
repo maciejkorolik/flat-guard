@@ -154,6 +154,11 @@ async function insertNormalizedRows(client, rows) {
         url: row.url,
         title: row.title,
         description: row.description,
+        exact_location_available: row.exact_location_available,
+        image_urls: row.image_urls,
+        source_business_type: row.source_business_type,
+        source_offer_payload: row.source_offer_payload,
+        source_detail_payload: row.source_detail_payload,
         is_active: true,
         first_seen_at: row.scraped_at,
         last_seen_at: row.scraped_at,
@@ -182,6 +187,11 @@ async function updateNormalizedRow(client, row) {
     url: row.url,
     title: row.title,
     description: row.description,
+    exact_location_available: row.exact_location_available,
+    image_urls: row.image_urls,
+    source_business_type: row.source_business_type,
+    source_offer_payload: row.source_offer_payload,
+    source_detail_payload: row.source_detail_payload,
     is_active: true,
     last_seen_at: row.scraped_at,
     city: row.city,
@@ -219,12 +229,13 @@ try {
   const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey =
     env.SUPABASE_SERVICE_ROLE_KEY ||
+    env.SUPABASE_SERVICE_KEY ||
     env.SUPABASE_SECRET_KEY ||
     env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error(
-      "Missing Supabase credentials. Set NEXT_PUBLIC_SUPABASE_URL and either SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+      "Missing Supabase credentials. Set NEXT_PUBLIC_SUPABASE_URL and either SUPABASE_SERVICE_ROLE_KEY, SUPABASE_SERVICE_KEY, or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
     );
   }
 
