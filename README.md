@@ -37,6 +37,30 @@ Current scope:
 - curated extra categories: gym, climbing
 - optional free-text custom categories
 
+What the enrichment runner actually does:
+
+1. Reads raw OLX listings either from checked-in JSONL or from `raw_rental_listings` in Supabase.
+2. Builds a strict geocode query from `street + district + city`.
+3. Resolves coordinates with Google Geocoding or marks the row as `insufficient_input`, `zero_results`, or `failed`.
+4. Fetches short-horizon weather and air-quality snapshots for successfully geocoded listings.
+5. Builds a conservative sunlight estimate from location context, Google solar data, and listing text hints. This is an estimate for how sunny the area and listing may feel, not a factual flat orientation.
+6. Finds the closest lifestyle places for baseline and user-requested categories by combining Google Places candidate search with walking-time ranking from Google Routes.
+7. Persists run-level and listing-level enrichment records to Supabase and can also emit JSONL, CSV, and metadata artifacts under `data/enriched/`.
+
+Stored outputs:
+
+- `enrichment_runs` records batch metadata, requested categories, counts, and run status.
+- `listing_enrichments` stores geocode, weather, air quality, and sunlight results per listing.
+- `listing_proximity_matches` stores the best winning place per category, ranked by walking travel time.
+- `data/enriched/*.jsonl`, `*.csv`, and `*.meta.json` provide local inspection/export artifacts when file writes are enabled.
+
+Current limitations:
+
+- no long-term rainfall climatology or annual pollution history yet
+- no precise apartment-facing orientation unless explicitly stated in the source listing
+- no transit-aware or bike-accessibility scoring yet
+- no route-level ranking or meetup-area optimization yet; this work is listing-level enrichment only
+
 Primary files:
 
 - [20260328153000_listing_enrichments.sql](/Users/bruno/Desktop/work/hackathon/supabase/migrations/20260328153000_listing_enrichments.sql) — enrichment tables
