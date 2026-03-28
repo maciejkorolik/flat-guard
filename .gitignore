@@ -45,3 +45,8 @@ next-env.d.ts
 scraper/node_modules
 scraper/dist
 scraper/.env
+
+# img_analyze
+img_analyze/node_modules
+img_analyze/dist
+img_analyze/.env

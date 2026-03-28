@@ -1,0 +1,20 @@
+{
+  "name": "flatguard-img-analyze",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "analyze": "tsx src/index.ts",
+    "analyze:dry": "tsx src/index.ts --dry-run",
+    "analyze:test": "tsx src/index.ts --limit 3 --dry-run"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "@supabase/supabase-js": "^2.49.4",
+    "dotenv": "^16.4.7",
+    "openai": "^4.85.4"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4",
+    "typescript": "^5.7.3"
+  }
+}
