@@ -6,6 +6,7 @@
     "start": "next start",
     "lint": "eslint .",
     "enrich:sample": "node scripts/enrich-rental-listings-google.mjs --input-file ../../../.local-data/olx/olx_wroclaw_rentals_raw_20260328T113702845Z.jsonl",
+    "enrich:normalized": "node scripts/enrich-listings-normalized-batches.mjs",
     "test:enrichment": "node --experimental-transform-types --test lib/enrichment/pipeline.test.mjs lib/enrichment/io.test.mjs lib/enrichment/valid-enrichment.test.mts",
     "validate:live-enrichment": "node scripts/validate-live-enrichment-readiness.mjs",
     "olx:completeness": "node scripts/report-olx-ingest-completeness.mjs",
