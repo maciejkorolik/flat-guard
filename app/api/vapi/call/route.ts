@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import type { InitiateCallRequest, InitiateCallResponse } from "@/lib/vapi/types";
+import type { InitiateCallRequest, InitiateCallResponse, CallRecord } from "@/lib/vapi/types";
+import { callsRepo } from "@/lib/vapi/store";
 
 const VAPI_API_URL = "https://api.vapi.ai/call";
 
@@ -12,16 +13,19 @@ export async function POST(req: Request) {
 
   if (!vapiPrivateKey || !assistantId || !phoneNumberId) {
     return NextResponse.json(
-      { error: "Missing Vapi configuration. Set VAPI_PRIVATE_KEY, VAPI_ASSISTANT_ID, VAPI_PHONE_NUMBER_ID in .env.local" },
+      {
+        error:
+          "Missing Vapi configuration. Set VAPI_PRIVATE_KEY, VAPI_ASSISTANT_ID, VAPI_PHONE_NUMBER_ID in .env.local",
+      },
       { status: 500 }
     );
   }
 
-  const { phoneNumber, missingInfoSpec } = body;
+  const { phoneNumber, listingId, missingInfoSpec } = body;
 
-  if (!phoneNumber || !missingInfoSpec) {
+  if (!phoneNumber || !listingId || !missingInfoSpec) {
     return NextResponse.json(
-      { error: "phoneNumber and missingInfoSpec are required" },
+      { error: "phoneNumber, listingId, and missingInfoSpec are required" },
       { status: 400 }
     );
   }
@@ -54,9 +58,27 @@ export async function POST(req: Request) {
   }
 
   const call = await vapiResp.json();
+  const callId: string = call.id;
+  const now = new Date().toISOString();
+
+  const record: CallRecord = {
+    callId,
+    listingId,
+    missingInfoSpec,
+    status: call.status ?? "queued",
+    endedReason: null,
+    transcript: null,
+    recordingUrl: null,
+    rawCall: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  callsRepo.create(record);
+  console.log(`[vapi/call] Stored call record: callId=${callId}, listingId=${listingId}`);
 
   const response: InitiateCallResponse = {
-    callId: call.id,
+    callId,
     status: call.status ?? "queued",
   };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { MissingInfoSpec, InitiateCallResponse } from "@/lib/vapi/types";
+import type { MissingInfoSpec, InitiateCallResponse, CallRecord } from "@/lib/vapi/types";
 
 const EXAMPLE_SPEC: MissingInfoSpec = {
   listing: {
@@ -33,13 +33,9 @@ const EXAMPLE_SPEC: MissingInfoSpec = {
 type CallState = "idle" | "calling" | "done" | "error";
 type SimState = "idle" | "running" | "done" | "error";
 
-type DebugData = {
-  followups: Record<string, unknown>;
-  transcripts: Record<string, unknown>;
-};
-
 export default function VapiPocPage() {
   const [phoneNumber, setPhoneNumber] = useState("+49");
+  const [listingId, setListingId] = useState(EXAMPLE_SPEC.listing.id);
   const [specJson, setSpecJson] = useState(JSON.stringify(EXAMPLE_SPEC, null, 2));
   const [callState, setCallState] = useState<CallState>("idle");
   const [callResult, setCallResult] = useState<InitiateCallResponse | null>(null);
@@ -49,7 +45,7 @@ export default function VapiPocPage() {
   const [simCallId, setSimCallId] = useState<string | null>(null);
   const [simError, setSimError] = useState<string | null>(null);
 
-  const [debugData, setDebugData] = useState<DebugData | null>(null);
+  const [calls, setCalls] = useState<CallRecord[] | null>(null);
   const [debugLoading, setDebugLoading] = useState(false);
 
   async function handleCall() {
@@ -70,7 +66,7 @@ export default function VapiPocPage() {
       const resp = await fetch("/api/vapi/call", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber, missingInfoSpec: spec }),
+        body: JSON.stringify({ phoneNumber, listingId, missingInfoSpec: spec }),
       });
       const data = await resp.json();
       if (!resp.ok) {
@@ -102,7 +98,7 @@ export default function VapiPocPage() {
       const resp = await fetch("/api/vapi/simulate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ spec }),
+        body: JSON.stringify({ spec, listingId }),
       });
       const data = await resp.json();
       if (!resp.ok) {
@@ -123,30 +119,29 @@ export default function VapiPocPage() {
     try {
       const resp = await fetch("/api/vapi/debug");
       const data = await resp.json();
-      setDebugData(data);
+      setCalls(data.calls ?? []);
     } finally {
       setDebugLoading(false);
     }
   }, []);
-
-  const followupEntries = debugData ? Object.entries(debugData.followups) : [];
 
   return (
     <div className="max-w-3xl mx-auto p-8 space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Vapi Outbound Caller — POC</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Test outbound calling to landlords/agents with dynamic follow-up questions.
+          Test outbound calling to landlords/agents. Results arrive via{" "}
+          <code className="font-mono">end-of-call-report</code> webhook only — no tool calls.
         </p>
       </div>
 
       {/* Simulate section */}
       <section className="rounded-lg border p-5 space-y-3">
         <div>
-          <h2 className="font-medium">Simulate webhook (no real call needed)</h2>
+          <h2 className="font-medium">Simulate end-of-call-report (no real call needed)</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Fires mock Vapi payloads to{" "}
-            <code className="font-mono">/api/vapi/tool-calls</code> and{" "}
+            Seeds a call record then fires a mock{" "}
+            <code className="font-mono">end-of-call-report</code> to{" "}
             <code className="font-mono">/api/vapi/events</code>. Check the terminal for logs.
           </p>
         </div>
@@ -173,9 +168,9 @@ export default function VapiPocPage() {
       <section className="rounded-lg border p-5 space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-medium">In-memory store</h2>
+            <h2 className="font-medium">In-memory call store</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              View all stored followup results and transcripts (also logs to terminal).
+              All call records (created on initiation, updated on end-of-call-report).
             </p>
           </div>
           <button
@@ -187,23 +182,30 @@ export default function VapiPocPage() {
           </button>
         </div>
 
-        {debugData && (
+        {calls !== null && (
           <div className="space-y-4">
-            {followupEntries.length === 0 ? (
+            {calls.length === 0 ? (
               <p className="text-xs text-muted-foreground">No records yet.</p>
             ) : (
-              followupEntries.map(([callId, record]) => (
-                <div key={callId} className="rounded-md border text-xs font-mono overflow-x-auto">
+              calls.map((record) => (
+                <div
+                  key={record.callId}
+                  className="rounded-md border text-xs font-mono overflow-x-auto"
+                >
                   <div className="bg-muted/50 px-3 py-1.5 flex items-center justify-between">
-                    <span className="font-medium">callId: {callId}</span>
-                    <span className={
-                      (record as { outcome: string }).outcome === "completed"
-                        ? "text-green-700 dark:text-green-400"
-                        : (record as { outcome: string }).outcome === "partial"
-                        ? "text-yellow-700 dark:text-yellow-400"
-                        : "text-red-600 dark:text-red-400"
-                    }>
-                      {(record as { outcome: string }).outcome}
+                    <span className="font-medium">
+                      callId: {record.callId} · listingId: {record.listingId}
+                    </span>
+                    <span
+                      className={
+                        record.status === "completed"
+                          ? "text-green-700 dark:text-green-400"
+                          : record.status === "failed" || record.status === "no-answer"
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-yellow-700 dark:text-yellow-400"
+                      }
+                    >
+                      {record.status}
                     </span>
                   </div>
                   <pre className="px-3 py-2 text-[11px] leading-relaxed overflow-x-auto">
@@ -228,18 +230,34 @@ export default function VapiPocPage() {
           </p>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="phone">
-            Phone number (E.164)
-          </label>
-          <input
-            id="phone"
-            type="tel"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="+49123456789"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="phone">
+              Phone number (E.164)
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="+49123456789"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="listingId">
+              Listing ID
+            </label>
+            <input
+              id="listingId"
+              type="text"
+              value={listingId}
+              onChange={(e) => setListingId(e.target.value)}
+              placeholder="flat_123"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -267,9 +285,7 @@ export default function VapiPocPage() {
           <div className="rounded-md border border-green-500 bg-green-50 dark:bg-green-950 p-3 text-sm space-y-1">
             <p className="font-medium text-green-800 dark:text-green-200">Call queued</p>
             <p className="font-mono text-xs">callId: {callResult.callId}</p>
-            <p className="text-xs text-muted-foreground">
-              Status: {callResult.status}
-            </p>
+            <p className="text-xs text-muted-foreground">Status: {callResult.status}</p>
           </div>
         )}
 
@@ -282,11 +298,13 @@ export default function VapiPocPage() {
       </section>
 
       <section className="text-xs text-muted-foreground space-y-1 border-t pt-4">
-        <p className="font-medium">Webhook endpoints (configure in Vapi dashboard):</p>
+        <p className="font-medium">Webhook endpoint (configure in Vapi dashboard):</p>
         <ul className="list-disc list-inside space-y-0.5 font-mono">
-          <li>{"{YOUR_BASE_URL}"}/api/vapi/tool-calls</li>
           <li>{"{YOUR_BASE_URL}"}/api/vapi/events</li>
         </ul>
+        <p className="mt-2">
+          Event type handled: <span className="font-mono">end-of-call-report</span>
+        </p>
       </section>
     </div>
   );

@@ -26,38 +26,30 @@ export type MissingInfoSpec = {
   };
 };
 
-export type UnansweredReason =
-  | "refused"
-  | "unknown"
-  | "no_answer"
-  | "wrong_person"
-  | "interrupted";
+export type CallStatus =
+  | "queued"
+  | "ringing"
+  | "in-progress"
+  | "completed"
+  | "failed"
+  | "no-answer";
 
-export type FollowupResult = {
-  listingId: string;
-  answers: Record<string, string | number | boolean | null>;
-  unanswered: Record<string, { reason: UnansweredReason; notes?: string }>;
-  extra: Record<string, unknown>;
-  outcome: "completed" | "partial" | "failed";
-  transcriptBestEffort: string;
-};
-
-export type FollowupResultRecord = {
-  id: string;
-  createdAt: string;
-  listingId: string;
+export type CallRecord = {
   callId: string;
-  answers: Record<string, string | number | boolean | null>;
-  unanswered: Record<string, { reason: string; notes?: string }>;
-  extra: Record<string, unknown>;
-  outcome: "completed" | "partial" | "failed";
+  listingId: string;
+  missingInfoSpec: MissingInfoSpec;
+  status: CallStatus;
+  endedReason: string | null;
   transcript: string | null;
-  transcriptBestEffort: string | null;
-  recordingUrl?: string | null;
+  recordingUrl: string | null;
+  rawCall: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type InitiateCallRequest = {
   phoneNumber: string;
+  listingId: string;
   missingInfoSpec: MissingInfoSpec;
 };
 
