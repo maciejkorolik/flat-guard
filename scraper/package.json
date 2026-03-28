@@ -1,0 +1,23 @@
+{
+  "name": "flatguard-scraper",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scrape": "tsx src/index.ts",
+    "scrape:olx": "tsx src/index.ts olx",
+    "scrape:otodom": "tsx src/index.ts otodom",
+    "scrape:gratka": "tsx src/index.ts gratka",
+    "scrape:morizon": "tsx src/index.ts morizon",
+    "scrape:domiporta": "tsx src/index.ts domiporta"
+  },
+  "dependencies": {
+    "@mendable/firecrawl-js": "^1.15.0",
+    "@supabase/supabase-js": "^2.49.4",
+    "dotenv": "^16.4.7",
+    "p-limit": "^6.2.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4",
+    "typescript": "^5.7.3"
+  }
+}

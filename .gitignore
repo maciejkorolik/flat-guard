@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scraper
+scraper/node_modules
+scraper/dist
+scraper/.env

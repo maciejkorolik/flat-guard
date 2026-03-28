@@ -1,0 +1,1753 @@
+{
+  "name": "FlatGuard – Scraper",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const TARGETS = [\n  { city: 'warszawa', url: 'https://www.olx.pl/nieruchomosci/mieszkania/wynajem/warszawa/' },\n  // { city: 'krakow', url: 'https://www.olx.pl/nieruchomosci/mieszkania/wynajem/krakow/' },\n];\nconst MAX_PAGES = 20;\n\nconst targets = [];\nfor (const { city, url } of TARGETS) {\n  for (let page = 18; page <= MAX_PAGES; page++) {\n    targets.push({\n      json: {\n        city,\n        page,\n        listingUrl: page === 1 ? url : `${url}?page=${page}`\n      }\n    });\n  }\n}\nreturn targets;"
+      },
+      "id": "067809e4-a949-433b-9046-d831f9a1574e",
+      "name": "Build URL List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1616,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": "={{ $prevNode.name == 'Loop Over Details' }}"
+        }
+      },
+      "id": "021a03c4-4039-4d35-a298-23890eadf019",
+      "name": "Loop Over Pages",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1408,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json.listingUrl }}",
+        "requestOptions": {}
+      },
+      "id": "eba3e3d0-d274-4beb-b757-675c83050470",
+      "name": "Firecrawl – Listing Page",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        800
+      ],
+      "credentials": {
+        "firecrawlApi": {
+          "id": "RMoJqsKv9Ckan819",
+          "name": "Firecrawl account DominikP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Firecrawl zwraca data.markdown — parsujemy linki z formatu markdown [tekst](url)\nconst input = $input.item.json;\nconst markdown = input.data?.markdown || input.markdown || '';\n\nif (!markdown) {\n  console.log('[OLX List] Brak markdown dla:', input.listingUrl);\n  return [];\n}\n\n// Wyciągamy URL-e z linków markdown: (https://www.olx.pl/d/oferta/...)\nconst linkRegex = /\\(https:\\/\\/www\\.olx\\.pl\\/d\\/oferta\\/([^)]+)\\)/g;\nconst found = new Map();\nlet match;\n\nwhile ((match = linkRegex.exec(markdown)) !== null) {\n  const fullPath = match[1].split('?')[0]; // usuń query string\n  const cleanUrl = `https://www.olx.pl/d/oferta/${fullPath}`;\n  \n  // ExternalId z wzorca -ID{id}.html np. CID3-ID19WXzx → ID19WXzx\n  const externalId = fullPath.match(/-ID([A-Za-z0-9]+)\\.html$/)?.[1]\n    || fullPath.replace('.html', '').split('-').pop();\n  \n  if (externalId && !found.has(externalId)) {\n    found.set(externalId, { cleanUrl, externalId });\n  }\n}\n\nconsole.log(`[OLX List] Znaleziono ${found.size} ogłoszeń OLX`);\n\nreturn Array.from(found.values()).map(({ cleanUrl, externalId }) => ({\n  json: {\n    city: input.city || 'warszawa',\n    source: 'olx',\n    detailUrl: cleanUrl,\n    externalId\n  }\n}));"
+      },
+      "id": "e751d883-30e9-4fd0-a424-57853e00f7af",
+      "name": "Parse Listing Links",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -944,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.detailUrl }}",
+              "operation": "startsWith",
+              "value2": "https://"
+            }
+          ]
+        }
+      },
+      "id": "86b25bcb-0815-49c5-ad25-353bce0b1e10",
+      "name": "Filter Valid Links",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": "={{ $prevNode == $('Filter Valid Links') }}"
+        }
+      },
+      "id": "08c2aa98-0f85-49a8-b725-f15d320804a6",
+      "name": "Loop Over Details",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -496,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json.detailUrl }}",
+        "requestOptions": {}
+      },
+      "id": "42736585-a0ca-4b79-95f4-d9ae6a972f00",
+      "name": "Firecrawl – Detail Page",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        608
+      ],
+      "credentials": {
+        "firecrawlApi": {
+          "id": "RMoJqsKv9Ckan819",
+          "name": "Firecrawl account DominikP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "listings_raw",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.raw.source }}"
+            },
+            {
+              "fieldId": "external_id",
+              "fieldValue": "={{ $json.raw.external_id }}"
+            },
+            {
+              "fieldId": "raw_data",
+              "fieldValue": "={{ $json.raw.raw_data }}"
+            },
+            {
+              "fieldId": "scraped_at",
+              "fieldValue": "={{ $json.raw.scraped_at }}"
+            }
+          ]
+        }
+      },
+      "id": "894eb9df-ea71-48c1-87bb-b4bbe6dd67e7",
+      "name": "Supabase – Insert Raw",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        640,
+        608
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "3qH4dRUbdoSXapNU",
+          "name": "Supabase account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json;\nconst markdown = input.data?.markdown || input.markdown || '';\nconst meta = input.data?.metadata || input.metadata || {};\n\nconst detailUrl = meta.url || meta.sourceURL || input.detailUrl || '';\nconst externalId = input.externalId\n  || detailUrl.match(/-ID([A-Za-z0-9]+)\\.html$/)?.[1]\n  || null;\n\nif (!markdown || !externalId) return [{ json: { _skip: true } }];\n\nreturn [{\n  json: {\n    source: 'olx',\n    externalId,\n    raw: {\n      source: 'olx',\n      external_id: externalId,\n      raw_data: JSON.stringify({\n        url: detailUrl,\n        markdown,\n        metadata: meta,\n        scraped_at: new Date().toISOString()\n      }),\n      scraped_at: new Date().toISOString()\n    }\n  }\n}]"
+      },
+      "id": "7e78034b-bbfb-435b-833f-d703a4fc54d9",
+      "name": "Prepare raw data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json;\nconst markdown = input.data?.markdown || input.markdown || '';\nconst meta = input.data?.metadata || input.metadata || {};\n\nconst detailUrl = meta.url || meta.sourceURL || input.detailUrl || '';\n\n// Extract Otodom externalId from URL\nconst externalId = input.externalId\n  || detailUrl.match(/-ID(\\d+)(?:\\/)?$/)?.[1]\n  || detailUrl.split('/').filter(Boolean).pop()\n  || null;\n\nif (!markdown || !externalId) return [{ json: { _skip: true } }];\n\nreturn [{\n  json: {\n    source: 'otodom',\n    externalId,\n    raw: {\n      source: 'otodom',\n      external_id: externalId,\n      raw_data: JSON.stringify({\n        url: detailUrl,\n        markdown,\n        metadata: meta,\n        scraped_at: new Date().toISOString()\n      }),\n      scraped_at: new Date().toISOString()\n    }\n  }\n}]"
+      },
+      "id": "ca12bbc8-b5ec-480d-a4da-38e0bef0938b",
+      "name": "Prepare Raw Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json._skip }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "0c7ba532-e3f1-4c0b-b428-d7f32cc0344d",
+      "name": "Skip Invalid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        432,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "03ba2203-ce64-4a70-a26d-f0d46a1c3a67",
+      "name": "Schedule Trigger1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1840,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const TARGETS = [\n  { city: 'warszawa', url: 'https://www.otodom.pl/pl/wyniki/wynajem/mieszkanie/mazowieckie/warszawa/warszawa/warszawa' },\n];\nconst MAX_PAGES = 15;\n\nconst targets = [];\nfor (const { city, url } of TARGETS) {\n  for (let page = 3; page <= MAX_PAGES; page++) {\n    targets.push({\n      json: {\n        city,\n        page,\n        listingUrl: page === 1 ? url : `${url}?page=${page}`\n      }\n    });\n  }\n}\nreturn targets;"
+      },
+      "id": "07fa6ded-ad59-45d5-80f3-b21a9f02b9a8",
+      "name": "Build URL List1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1616,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "6285f105-cfa2-4e8c-a291-1bc48c00ec8d",
+      "name": "Loop Over Pages1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1408,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json.listingUrl }}",
+        "requestOptions": {}
+      },
+      "id": "1514a476-1603-4aef-8610-a00a86634ae5",
+      "name": "Firecrawl – Listing Page1",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        1312
+      ],
+      "credentials": {
+        "firecrawlApi": {
+          "id": "RMoJqsKv9Ckan819",
+          "name": "Firecrawl account DominikP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Otodom: extract offer links from markdown\n// Offer URLs look like: https://www.otodom.pl/pl/oferta/<slug>-ID<id>\nconst input = $input.item.json;\nconst markdown = input.data?.markdown || input.markdown || '';\n\nif (!markdown) {\n  console.log('[Otodom List] Brak markdown dla:', input.listingUrl);\n  return [];\n}\n\n// Match links to /pl/oferta/... paths\nconst linkRegex = /\\(https:\\/\\/www\\.otodom\\.pl\\/pl\\/oferta\\/([^)\\s]+)\\)/g;\nconst found = new Map();\nlet match;\n\nwhile ((match = linkRegex.exec(markdown)) !== null) {\n  const slug = match[1].split('?')[0].replace(/\\/$/, '');\n  const cleanUrl = `https://www.otodom.pl/pl/oferta/${slug}`;\n\n  // ExternalId: last segment after final hyphen or the full slug\n  // Otodom slugs end with -ID<numeric> e.g. kawalerka-na-wynajem-ID123456\n  const externalId = slug.match(/-ID(\\d+)$/)?.[1]\n    || slug.split('/').pop();\n\n  if (externalId && !found.has(externalId)) {\n    found.set(externalId, { cleanUrl, externalId });\n  }\n}\n\nconsole.log(`[Otodom List] Znaleziono ${found.size} ogłoszeń Otodom`);\n\nreturn Array.from(found.values()).map(({ cleanUrl, externalId }) => ({\n  json: {\n    city: input.city || 'warszawa',\n    source: 'otodom',\n    detailUrl: cleanUrl,\n    externalId\n  }\n}));"
+      },
+      "id": "95e5d8ba-7a9e-4fb1-b71d-1799894bf78b",
+      "name": "Parse Listing Links1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -944,
+        1312
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.detailUrl }}",
+              "operation": "startsWith",
+              "value2": "https://"
+            }
+          ]
+        }
+      },
+      "id": "26d7f1da-e09a-4e43-820b-ec174a72ba5b",
+      "name": "Filter Valid Links1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "69189278-ffe0-4015-9600-3f89bd028b6d",
+      "name": "Loop Over Details1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -496,
+        1312
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json.detailUrl }}",
+        "requestOptions": {}
+      },
+      "id": "c49618c1-02ad-4b53-8b37-dfe25c76273d",
+      "name": "Firecrawl – Detail Page1",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        1120
+      ],
+      "credentials": {
+        "firecrawlApi": {
+          "id": "RMoJqsKv9Ckan819",
+          "name": "Firecrawl account DominikP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "listings_raw",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.raw.source }}"
+            },
+            {
+              "fieldId": "external_id",
+              "fieldValue": "={{ $json.raw.external_id }}"
+            },
+            {
+              "fieldId": "raw_data",
+              "fieldValue": "={{ $json.raw.raw_data }}"
+            },
+            {
+              "fieldId": "scraped_at",
+              "fieldValue": "={{ $json.raw.scraped_at }}"
+            }
+          ]
+        }
+      },
+      "id": "700a6e1a-486f-4cdb-b369-9550d1af317e",
+      "name": "Supabase – Insert Raw1",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        640,
+        1120
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "3qH4dRUbdoSXapNU",
+          "name": "Supabase account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## OLX.PL\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        544
+      ],
+      "id": "70c789da-62ad-4c70-b743-88a47db31d39",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## OTODOM.pl\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1840,
+        1072
+      ],
+      "id": "60bf50b5-7774-4cc4-8836-42e3e0ddd1b1",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## GRATKA.PL\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1872,
+        1568
+      ],
+      "id": "e4bed633-7084-4a1e-9b0c-8a87e7f33f80",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## MORIZON\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1840,
+        2224
+      ],
+      "id": "7f28487c-cec5-458c-a317-5a02e1a5a56b",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## DOMIPORTA\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        2656
+      ],
+      "id": "c8be9893-de25-4cae-8bb2-5d59117d6529",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "df4be903-9465-47f7-a116-59eda5a26973",
+      "name": "Schedule Trigger2",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1824,
+        1952
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gratka: pagination via ?page=N\nconst TARGETS = [\n  { city: 'warszawa', url: 'https://gratka.pl/nieruchomosci/mieszkania/warszawa/wynajem' },\n];\nconst MAX_PAGES = 3;\n\nconst targets = [];\nfor (const { city, url } of TARGETS) {\n  for (let page = 1; page <= MAX_PAGES; page++) {\n    targets.push({\n      json: {\n        city,\n        page,\n        listingUrl: page === 1 ? url : `${url}?page=${page}`\n      }\n    });\n  }\n}\nreturn targets;"
+      },
+      "id": "56718532-3b89-4b60-b30a-e43ad224ab88",
+      "name": "Build URL List2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1600,
+        1952
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "4a3f6b1c-2343-41d2-babc-fb5994c005e4",
+      "name": "Loop Over Pages2",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1392,
+        1984
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json.listingUrl }}",
+        "requestOptions": {}
+      },
+      "id": "c8262552-04d2-458f-a837-ce8b5de67cb2",
+      "name": "Firecrawl – Listing Page2",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        2000
+      ],
+      "credentials": {
+        "firecrawlApi": {
+          "id": "RMoJqsKv9Ckan819",
+          "name": "Firecrawl account DominikP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gratka: extract offer links from markdown\n// Real URL format: https://gratka.pl/nieruchomosci/<slug>/<oi|ob>/<numericId>\n// Example: https://gratka.pl/nieruchomosci/mieszkanie-warszawa-ursynow-dereniowa/oi/41593583\nconst input = $input.item.json;\nconst markdown = input.data?.markdown || input.markdown || '';\n\nif (!markdown) {\n  console.log('[Gratka List] Brak markdown dla:', input.listingUrl);\n  return [];\n}\n\n// Match /nieruchomosci/<slug>/<oi|ob>/<numericId>\nconst linkRegex = /\\(https:\\/\\/gratka\\.pl\\/nieruchomosci\\/[^)\\s]+?\\/(oi|ob)\\/(\\d+)\\)/g;\nconst found = new Map();\nlet match;\n\nwhile ((match = linkRegex.exec(markdown)) !== null) {\n  const externalId = match[2];\n  const cleanUrl = match[0].slice(1, -1); // strip surrounding parens\n\n  if (externalId && !found.has(externalId)) {\n    found.set(externalId, { cleanUrl, externalId });\n  }\n}\n\nconsole.log(`[Gratka List] Znaleziono ${found.size} ogłoszeń Gratka`);\n\nreturn Array.from(found.values()).map(({ cleanUrl, externalId }) => ({\n  json: {\n    city: input.city || 'warszawa',\n    source: 'gratka',\n    detailUrl: cleanUrl,\n    externalId\n  }\n}));"
+      },
+      "id": "2dd9c4a9-95a4-452b-9af2-57b88200c332",
+      "name": "Parse Listing Links2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -928,
+        2000
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.detailUrl }}",
+              "operation": "startsWith",
+              "value2": "https://"
+            }
+          ]
+        }
+      },
+      "id": "6d09ecce-eb2a-44a5-a7aa-fc36216337c1",
+      "name": "Filter Valid Links2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        2016
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "da288db4-1081-4fd5-8c11-7f9547cdd83d",
+      "name": "Loop Over Details2",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -480,
+        2000
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json.detailUrl }}",
+        "requestOptions": {}
+      },
+      "id": "3004eb4b-c753-4189-85ea-a5b23a316939",
+      "name": "Firecrawl – Detail Page2",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        1808
+      ],
+      "credentials": {
+        "firecrawlApi": {
+          "id": "RMoJqsKv9Ckan819",
+          "name": "Firecrawl account DominikP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json;\nconst markdown = input.data?.markdown || input.markdown || '';\nconst meta = input.data?.metadata || input.metadata || {};\n\nconst detailUrl = meta.url || meta.sourceURL || input.detailUrl || '';\n\n// Extract Gratka externalId: numeric segment after /oi/ or /ob/\n// e.g. https://gratka.pl/nieruchomosci/mieszkanie-warszawa-ursynow/oi/41593583\nconst externalId = input.externalId\n  || detailUrl.match(/\\/(?:oi|ob)\\/(\\d+)(?:\\/|$)/)?.[1]\n  || null;\n\nif (!markdown || !externalId) return [{ json: { _skip: true } }];\n\nreturn [{\n  json: {\n    source: 'gratka',\n    externalId,\n    raw: {\n      source: 'gratka',\n      external_id: externalId,\n      raw_data: JSON.stringify({\n        url: detailUrl,\n        markdown,\n        metadata: meta,\n        scraped_at: new Date().toISOString()\n      }),\n      scraped_at: new Date().toISOString()\n    }\n  }\n}]"
+      },
+      "id": "31fea0a2-a092-4e11-a081-402d8ae57c37",
+      "name": "Prepare Raw Data1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        1808
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json._skip }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "4818822a-f17e-4dc6-8b9a-181f69cd2862",
+      "name": "Skip Invalid?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        448,
+        1808
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "listings_raw",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.raw.source }}"
+            },
+            {
+              "fieldId": "external_id",
+              "fieldValue": "={{ $json.raw.external_id }}"
+            },
+            {
+              "fieldId": "raw_data",
+              "fieldValue": "={{ $json.raw.raw_data }}"
+            },
+            {
+              "fieldId": "scraped_at",
+              "fieldValue": "={{ $json.raw.scraped_at }}"
+            }
+          ]
+        }
+      },
+      "id": "a90d63bc-3dd0-460c-9017-009a2eef48a1",
+      "name": "Supabase – Insert Raw2",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        656,
+        1808
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "3qH4dRUbdoSXapNU",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "9f8e7550-a609-4d4e-a9b2-16bdfd30acf4",
+      "name": "Schedule Trigger3",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1824,
+        2480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Morizon: correct listing URL\n// Pagination: ?page=N\nconst TARGETS = [\n  { city: 'warszawa', url: 'https://www.morizon.pl/do-wynajecia/mieszkania/warszawa/' },\n];\nconst MAX_PAGES = 3;\n\nconst targets = [];\nfor (const { city, url } of TARGETS) {\n  for (let page = 1; page <= MAX_PAGES; page++) {\n    targets.push({\n      json: {\n        city,\n        page,\n        listingUrl: page === 1 ? url : `${url}?page=${page}`\n      }\n    });\n  }\n}\nreturn targets;"
+      },
+      "id": "401986f6-d84e-41c3-9417-900b771ac625",
+      "name": "Build URL List3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1600,
+        2480
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "46a13777-bb4d-4862-a318-60cc2d9b9a4d",
+      "name": "Loop Over Pages3",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1392,
+        2512
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json.listingUrl }}",
+        "requestOptions": {}
+      },
+      "id": "95b653ff-0780-4b35-8e0f-48712e560faa",
+      "name": "Firecrawl – Listing Page3",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        2528
+      ],
+      "credentials": {
+        "firecrawlApi": {
+          "id": "RMoJqsKv9Ckan819",
+          "name": "Firecrawl account DominikP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Morizon: extract offer links from markdown\n// Real detail URL: https://www.morizon.pl/oferta/wynajem-mieszkanie-<slug>-mzn<numericId>\n// NO trailing slash — regex must NOT require one\nconst input = $input.item.json;\nconst markdown = input.data?.markdown || input.markdown || '';\n\nif (!markdown) {\n  console.log('[Morizon List] Brak markdown dla:', input.listingUrl);\n  return [];\n}\n\n// Match /oferta/...-mzn<numericId> — no trailing slash in actual URLs\nconst linkRegex = /\\(https:\\/\\/www\\.morizon\\.pl\\/oferta\\/([^)\\s]*?-mzn(\\d+))\\)/g;\nconst found = new Map();\nlet match;\n\nwhile ((match = linkRegex.exec(markdown)) !== null) {\n  const slug = match[1];\n  const externalId = match[2];\n  const cleanUrl = `https://www.morizon.pl/oferta/${slug}`;\n\n  if (externalId && !found.has(externalId)) {\n    found.set(externalId, { cleanUrl, externalId });\n  }\n}\n\nconsole.log(`[Morizon List] Znaleziono ${found.size} ogłoszeń Morizon`);\n\nreturn Array.from(found.values()).map(({ cleanUrl, externalId }) => ({\n  json: {\n    city: input.city || 'warszawa',\n    source: 'morizon',\n    detailUrl: cleanUrl,\n    externalId\n  }\n}));"
+      },
+      "id": "59790f51-b61b-4013-9c00-b8000678f08d",
+      "name": "Parse Listing Links3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -928,
+        2528
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.detailUrl }}",
+              "operation": "startsWith",
+              "value2": "https://"
+            }
+          ]
+        }
+      },
+      "id": "119e9e66-7105-4133-b2ec-cb210df9d923",
+      "name": "Filter Valid Links3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        2544
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "55471d91-f73b-45a2-a102-e2fd40032a00",
+      "name": "Loop Over Details3",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -480,
+        2528
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json.detailUrl }}",
+        "requestOptions": {}
+      },
+      "id": "f6123fdd-fd4c-42e2-bf56-bd64c22f2eb3",
+      "name": "Firecrawl – Detail Page3",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        2336
+      ],
+      "credentials": {
+        "firecrawlApi": {
+          "id": "RMoJqsKv9Ckan819",
+          "name": "Firecrawl account DominikP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json;\nconst markdown = input.data?.markdown || input.markdown || '';\nconst meta = input.data?.metadata || input.metadata || {};\n\nconst detailUrl = meta.url || meta.sourceURL || input.detailUrl || '';\n\n// Extract Morizon externalId: numeric part after -mzn at end of URL\n// e.g. https://www.morizon.pl/oferta/wynajem-mieszkanie-warszawa-wawer-...-mzn2047074182\nconst externalId = input.externalId\n  || detailUrl.match(/-mzn(\\d+)$/)?.[1]\n  || null;\n\nif (!markdown || !externalId) return [{ json: { _skip: true } }];\n\nreturn [{\n  json: {\n    source: 'morizon',\n    externalId,\n    raw: {\n      source: 'morizon',\n      external_id: externalId,\n      raw_data: JSON.stringify({\n        url: detailUrl,\n        markdown,\n        metadata: meta,\n        scraped_at: new Date().toISOString()\n      }),\n      scraped_at: new Date().toISOString()\n    }\n  }\n}]"
+      },
+      "id": "4ef35bc8-f46f-4375-b982-b2ca1c420ac7",
+      "name": "Prepare Raw Data2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        2336
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json._skip }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "7671dd9e-9c2d-4dbd-b3b5-9801ee4a1872",
+      "name": "Skip Invalid?2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        448,
+        2336
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "listings_raw",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.raw.source }}"
+            },
+            {
+              "fieldId": "external_id",
+              "fieldValue": "={{ $json.raw.external_id }}"
+            },
+            {
+              "fieldId": "raw_data",
+              "fieldValue": "={{ $json.raw.raw_data }}"
+            },
+            {
+              "fieldId": "scraped_at",
+              "fieldValue": "={{ $json.raw.scraped_at }}"
+            }
+          ]
+        }
+      },
+      "id": "efce0910-6a49-4ad0-b1d4-3b55fe285fa2",
+      "name": "Supabase – Insert Raw3",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        656,
+        2336
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "3qH4dRUbdoSXapNU",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "84dd0d3e-6763-447e-8a0a-a6f650815639",
+      "name": "Schedule Trigger4",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1840,
+        3008
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Domiporta: correct listing URL and pagination\n// Pagination: ?PageNumber=N\nconst TARGETS = [\n  { city: 'warszawa', url: 'https://www.domiporta.pl/mieszkanie/wynajme/mazowieckie/warszawa' },\n];\nconst MAX_PAGES = 3;\n\nconst targets = [];\nfor (const { city, url } of TARGETS) {\n  for (let page = 1; page <= MAX_PAGES; page++) {\n    targets.push({\n      json: {\n        city,\n        page,\n        listingUrl: page === 1 ? url : `${url}?PageNumber=${page}`\n      }\n    });\n  }\n}\nreturn targets;"
+      },
+      "id": "caee7193-153f-4f55-9ec0-23a7553fc39f",
+      "name": "Build URL List4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1616,
+        3008
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "9a4eeac5-6bbd-4369-8e11-35e4d5de5a80",
+      "name": "Loop Over Pages4",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1408,
+        3040
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json.listingUrl }}",
+        "requestOptions": {}
+      },
+      "id": "a3a48aa5-38e0-45c7-b91d-86a8b1f20c6b",
+      "name": "Firecrawl – Listing Page4",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        3056
+      ],
+      "credentials": {
+        "firecrawlApi": {
+          "id": "RMoJqsKv9Ckan819",
+          "name": "Firecrawl account DominikP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Domiporta: extract offer links from markdown\n// Real detail URL: https://www.domiporta.pl/nieruchomosci/<slug>/<numericId>\n// Example: https://www.domiporta.pl/nieruchomosci/wynajme-mieszkanie-trzypokojowe-warszawa-mokotow-belgijska-62m2/156421140\nconst input = $input.item.json;\nconst markdown = input.data?.markdown || input.markdown || '';\n\nif (!markdown) {\n  console.log('[Domiporta List] Brak markdown dla:', input.listingUrl);\n  return [];\n}\n\n// Match /nieruchomosci/<slug>/<numericId> — the id is the last path segment, digits only\nconst linkRegex = /\\(https:\\/\\/www\\.domiporta\\.pl\\/nieruchomosci\\/([^)\\/\\s]+)\\/(\\d+)\\)/g;\nconst found = new Map();\nlet match;\n\nwhile ((match = linkRegex.exec(markdown)) !== null) {\n  const slug = match[1];\n  const externalId = match[2];\n  const cleanUrl = `https://www.domiporta.pl/nieruchomosci/${slug}/${externalId}`;\n\n  if (externalId && !found.has(externalId)) {\n    found.set(externalId, { cleanUrl, externalId });\n  }\n}\n\nconsole.log(`[Domiporta List] Znaleziono ${found.size} ogłoszeń Domiporta`);\n\nreturn Array.from(found.values()).map(({ cleanUrl, externalId }) => ({\n  json: {\n    city: input.city || 'warszawa',\n    source: 'domiporta',\n    detailUrl: cleanUrl,\n    externalId\n  }\n}));"
+      },
+      "id": "b6d0203d-8af7-4f80-8916-278323dbe886",
+      "name": "Parse Listing Links4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -944,
+        3056
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.detailUrl }}",
+              "operation": "startsWith",
+              "value2": "https://"
+            }
+          ]
+        }
+      },
+      "id": "52012337-221c-4221-837d-ce3903ca74b8",
+      "name": "Filter Valid Links4",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        3072
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "99d2d432-0c68-4749-b131-0dd710328aab",
+      "name": "Loop Over Details4",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -496,
+        3056
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json.detailUrl }}",
+        "requestOptions": {}
+      },
+      "id": "41a634c1-8295-4e83-88cc-dad9172b4824",
+      "name": "Firecrawl – Detail Page4",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        2864
+      ],
+      "credentials": {
+        "firecrawlApi": {
+          "id": "RMoJqsKv9Ckan819",
+          "name": "Firecrawl account DominikP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json;\nconst markdown = input.data?.markdown || input.markdown || '';\nconst meta = input.data?.metadata || input.metadata || {};\n\nconst detailUrl = meta.url || meta.sourceURL || input.detailUrl || '';\n\n// Extract Domiporta externalId: last numeric path segment\n// e.g. https://www.domiporta.pl/nieruchomosci/wynajme-mieszkanie-.../156421140\nconst externalId = input.externalId\n  || detailUrl.match(/\\/nieruchomosci\\/[^\\/]+\\/(\\d+)(?:\\/|$)/)?.[1]\n  || detailUrl.split('/').filter(s => /^\\d+$/.test(s)).pop()\n  || null;\n\nif (!markdown || !externalId) return [{ json: { _skip: true } }];\n\nreturn [{\n  json: {\n    source: 'domiporta',\n    externalId,\n    raw: {\n      source: 'domiporta',\n      external_id: externalId,\n      raw_data: JSON.stringify({\n        url: detailUrl,\n        markdown,\n        metadata: meta,\n        scraped_at: new Date().toISOString()\n      }),\n      scraped_at: new Date().toISOString()\n    }\n  }\n}]"
+      },
+      "id": "6469c0e6-f89a-4831-b994-64bab7067f13",
+      "name": "Prepare Raw Data3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        2864
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json._skip }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "5ed8ea8b-6de8-4449-be66-334d72d50793",
+      "name": "Skip Invalid?3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        432,
+        2864
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "listings_raw",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.raw.source }}"
+            },
+            {
+              "fieldId": "external_id",
+              "fieldValue": "={{ $json.raw.external_id }}"
+            },
+            {
+              "fieldId": "raw_data",
+              "fieldValue": "={{ $json.raw.raw_data }}"
+            },
+            {
+              "fieldId": "scraped_at",
+              "fieldValue": "={{ $json.raw.scraped_at }}"
+            }
+          ]
+        }
+      },
+      "id": "77e4ec80-04da-4978-a23c-074bc69844a6",
+      "name": "Supabase – Insert Raw4",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        640,
+        2864
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "3qH4dRUbdoSXapNU",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "c8d8cc1f-8c3b-46a5-ac2b-5d834e86abe9",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1840,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json._skip }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "59b705df-e79f-424d-92b6-cb9c736f504b",
+      "name": "Skip Invalid?4",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        432,
+        608
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Build URL List": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Pages": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Firecrawl – Listing Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl – Listing Page": {
+      "main": [
+        [
+          {
+            "node": "Parse Listing Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Listing Links": {
+      "main": [
+        [
+          {
+            "node": "Filter Valid Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Valid Links": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Details": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Firecrawl – Detail Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl – Detail Page": {
+      "main": [
+        [
+          {
+            "node": "Prepare raw data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare raw data": {
+      "main": [
+        [
+          {
+            "node": "Skip Invalid?4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Raw Data": {
+      "main": [
+        [
+          {
+            "node": "Skip Invalid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip Invalid?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Supabase – Insert Raw1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Build URL List1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build URL List1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Pages1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Pages1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Firecrawl – Listing Page1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl – Listing Page1": {
+      "main": [
+        [
+          {
+            "node": "Parse Listing Links1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Listing Links1": {
+      "main": [
+        [
+          {
+            "node": "Filter Valid Links1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Valid Links1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Details1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Details1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Pages1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Firecrawl – Detail Page1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl – Detail Page1": {
+      "main": [
+        [
+          {
+            "node": "Prepare Raw Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Build URL List2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build URL List2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Pages2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Pages2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Firecrawl – Listing Page2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl – Listing Page2": {
+      "main": [
+        [
+          {
+            "node": "Parse Listing Links2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Listing Links2": {
+      "main": [
+        [
+          {
+            "node": "Filter Valid Links2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Valid Links2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Details2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Details2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Pages2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Firecrawl – Detail Page2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl – Detail Page2": {
+      "main": [
+        [
+          {
+            "node": "Prepare Raw Data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Raw Data1": {
+      "main": [
+        [
+          {
+            "node": "Skip Invalid?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip Invalid?1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Supabase – Insert Raw2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Details2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger3": {
+      "main": [
+        [
+          {
+            "node": "Build URL List3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build URL List3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Pages3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Pages3": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Firecrawl – Listing Page3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl – Listing Page3": {
+      "main": [
+        [
+          {
+            "node": "Parse Listing Links3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Listing Links3": {
+      "main": [
+        [
+          {
+            "node": "Filter Valid Links3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Valid Links3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Details3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Details3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Pages3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Firecrawl – Detail Page3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl – Detail Page3": {
+      "main": [
+        [
+          {
+            "node": "Prepare Raw Data2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Raw Data2": {
+      "main": [
+        [
+          {
+            "node": "Skip Invalid?2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip Invalid?2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Supabase – Insert Raw3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Details3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger4": {
+      "main": [
+        [
+          {
+            "node": "Build URL List4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build URL List4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Pages4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Pages4": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Firecrawl – Listing Page4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl – Listing Page4": {
+      "main": [
+        [
+          {
+            "node": "Parse Listing Links4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Listing Links4": {
+      "main": [
+        [
+          {
+            "node": "Filter Valid Links4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Valid Links4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Details4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Details4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Pages4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Firecrawl – Detail Page4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl – Detail Page4": {
+      "main": [
+        [
+          {
+            "node": "Prepare Raw Data3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Raw Data3": {
+      "main": [
+        [
+          {
+            "node": "Skip Invalid?3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip Invalid?3": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Supabase – Insert Raw4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Details4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build URL List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase – Insert Raw": {
+      "main": [
+        []
+      ]
+    },
+    "Skip Invalid?4": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Supabase – Insert Raw",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase – Insert Raw1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Details1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ffeb16b4-f16a-4fca-89ed-091ad7443ab2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5a3035c090cb29a6cdc4170bb381cdff89d18a22aaeeb2c27e245117a66ca4a9"
+  },
+  "id": "nfu6UC0kIOF0ry0RfYX0p",
+  "tags": [
+    {
+      "updatedAt": "2026-03-28T14:15:15.782Z",
+      "createdAt": "2026-03-28T14:15:15.782Z",
+      "id": "zYxDJsp1NhWxBRPK",
+      "name": "Hackathon - 2026.03"
+    }
+  ]
+}
