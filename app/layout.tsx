@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Manrope, Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
