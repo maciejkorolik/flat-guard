@@ -6,6 +6,7 @@ import type { UIMessage } from "ai";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Send, Sparkles, Loader2, CheckCircle2, AlertCircle, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAutosizeTextarea } from "@/lib/use-autosize-textarea";
 import { CompactMarkdown } from "@/components/markdown/compact-markdown";
 import type { NormalizedListing, ScoredListing } from "@/lib/types/flatguard";
 import { mergeScoredListingsWithEnrichment } from "@/lib/scored-listing-enrichment";
@@ -193,6 +194,10 @@ export function SearchChatPanel({
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasGreeted = useRef(false);
+  const chatTextareaRef = useAutosizeTextarea(input, {
+    minHeightPx: 52,
+    maxHeightPx: 220,
+  });
 
   const scoredListingsForApi = useMemo(
     () => mergeScoredListingsWithEnrichment(scoredListings, rawListings),
@@ -430,7 +435,8 @@ export function SearchChatPanel({
       <div className="shrink-0 border-t border-slate-200/70 bg-white/80 backdrop-blur-md px-5 py-4">
         <div className="relative rounded-2xl border border-slate-200/90 bg-slate-50/80 shadow-inner shadow-slate-900/[0.03] focus-within:border-indigo-300/80 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/15 transition-all">
           <textarea
-            rows={2}
+            ref={chatTextareaRef}
+            rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}

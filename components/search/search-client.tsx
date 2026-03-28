@@ -8,9 +8,10 @@ import { ScoredListingCard } from "./scored-listing-card";
 import { SearchChatPanel } from "./search-chat-panel";
 import { ListingDetailModal } from "./listing-detail-modal";
 import type { NormalizedListing, ScoredListing, DbSearchProfile } from "@/lib/types/flatguard";
+import { parseProximityMatches } from "@/lib/flat-search-chat-tools";
 
 type Phase = "idle" | "phase1" | "phase2" | "done";
-type SortKey = "none" | "score" | "price_asc" | "price_desc";
+type SortKey = "none" | "score" | "price_asc" | "price_desc" | "sunlight_desc" | "aqi_best" | "park_asc" | "rain_asc";
 
 interface SearchClientProps {
   projectId: string;
@@ -69,15 +70,49 @@ function PhaseBar({ phase, found, scored, total }: {
   );
 }
 
+function normalizeAqiForSort(listing: NormalizedListing): number | null {
+  const v = listing.air_quality_aqi_value;
+  const code = listing.air_quality_aqi_index_code;
+  if (v == null) return null;
+  // uaqi: higher numeric = better air → sort descending (no flip)
+  if (code === "uaqi") return v;
+  // caqi, usa_epa: higher numeric = worse → flip so "higher = better" logic works
+  return -v;
+}
+
+function closestParkSeconds(listing: NormalizedListing): number {
+  const park = parseProximityMatches(listing.proximity_matches).find(
+    (p) => p.categoryKey.toLowerCase() === "park"
+  );
+  return park?.walkingDurationSeconds ?? Infinity;
+}
+
 function sortListings(listings: NormalizedListing[], scoreMap: Map<string, ScoredListing>, key: SortKey): NormalizedListing[] {
   if (key === "none") return listings;
   return [...listings].sort((a, b) => {
     if (key === "score") {
       return (scoreMap.get(b.id)?.overallScore ?? -1) - (scoreMap.get(a.id)?.overallScore ?? -1);
     }
-    const pa = a.total_monthly_pln ?? a.rent_pln ?? 0;
-    const pb = b.total_monthly_pln ?? b.rent_pln ?? 0;
-    return key === "price_asc" ? pa - pb : pb - pa;
+    if (key === "price_asc" || key === "price_desc") {
+      const pa = a.total_monthly_pln ?? a.rent_pln ?? 0;
+      const pb = b.total_monthly_pln ?? b.rent_pln ?? 0;
+      return key === "price_asc" ? pa - pb : pb - pa;
+    }
+    if (key === "sunlight_desc") {
+      return (b.sunlight_score ?? -1) - (a.sunlight_score ?? -1);
+    }
+    if (key === "aqi_best") {
+      const av = normalizeAqiForSort(a) ?? -Infinity;
+      const bv = normalizeAqiForSort(b) ?? -Infinity;
+      return bv - av;
+    }
+    if (key === "park_asc") {
+      return closestParkSeconds(a) - closestParkSeconds(b);
+    }
+    if (key === "rain_asc") {
+      return (a.weather_next12h_rain_hours ?? Infinity) - (b.weather_next12h_rain_hours ?? Infinity);
+    }
+    return 0;
   });
 }
 
@@ -235,6 +270,10 @@ export function SearchClient({ projectId, profile }: SearchClientProps) {
                     <option value="score">Highest Match Score</option>
                     <option value="price_asc">Lowest Price</option>
                     <option value="price_desc">Highest Price</option>
+                    <option value="sunlight_desc">Best Sunlight</option>
+                    <option value="aqi_best">Best Air Quality</option>
+                    <option value="park_asc">Closest Park</option>
+                    <option value="rain_asc">Least Rain</option>
                   </select>
                 </div>
                 <button

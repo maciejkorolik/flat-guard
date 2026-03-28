@@ -2,6 +2,7 @@ import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeListingFromDb } from "@/lib/listing-normalize";
+import { parseProximityMatches } from "@/lib/flat-search-chat-tools";
 import { z } from "zod";
 import type { NormalizedListing, ScoredListing } from "@/lib/types/flatguard";
 import { RESPOND_IN_ENGLISH_RULE } from "@/lib/ai-language-policy";
@@ -125,6 +126,14 @@ export async function POST(
     async start(controller) {
       for (const listing of listings) {
         const photoInspectionSnippet = truncatePhotoInspection(listing.flat_description_pictures);
+        const proximityPlaces = parseProximityMatches(listing.proximity_matches);
+        const byCat = (k: string) => proximityPlaces.find((p) => p.categoryKey.toLowerCase() === k);
+        const park = byCat("park");
+        const gym = byCat("gym");
+        const grocery = byCat("grocery");
+        const walkMins = (secs: number | null | undefined) =>
+          secs != null ? Math.round(secs / 60) : null;
+
         const listingDesc = [
           listing.title ? `Title: ${listing.title}` : null,
           listing.district ? `District: ${listing.district}` : null,
@@ -152,6 +161,15 @@ export async function POST(
             ? `Rainy hours next 12h (enrichment): ${listing.weather_next12h_rain_hours}`
             : null,
           listing.geocode_status ? `Geocode status (enrichment): ${listing.geocode_status}` : null,
+          walkMins(park?.walkingDurationSeconds) != null
+            ? `Nearest park: ${walkMins(park?.walkingDurationSeconds)} min walk${park?.placeName ? ` (${park.placeName})` : ""}`
+            : null,
+          walkMins(gym?.walkingDurationSeconds) != null
+            ? `Nearest gym: ${walkMins(gym?.walkingDurationSeconds)} min walk${gym?.placeName ? ` (${gym.placeName})` : ""}`
+            : null,
+          walkMins(grocery?.walkingDurationSeconds) != null
+            ? `Nearest grocery: ${walkMins(grocery?.walkingDurationSeconds)} min walk${grocery?.placeName ? ` (${grocery.placeName})` : ""}`
+            : null,
           listing.image_urls?.length
             ? `Photos: ${listing.image_urls.length} image URL(s) on file (normalized listing).`
             : null,
@@ -195,6 +213,7 @@ export async function POST(
             system: `You score apartment listings for relocating professionals. Be concise and accurate.
 Score 0–100. Provide 3–5 breakdown criteria (Budget Fit, Size, Location, Features, etc.), each 0–10.
 Recommendation: "strong" ≥80, "good" 60–79, "weak" <60.
+Never expose raw UUIDs or internal IDs in any text field — use listing title only.
 
 USER PROFILE:
 ${profileSummary}

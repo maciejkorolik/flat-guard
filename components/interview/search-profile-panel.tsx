@@ -8,15 +8,45 @@ interface SearchProfilePanelProps {
   projectId: string;
 }
 
+type ImportantLocation = {
+  name?: string;
+  address?: string;
+  max_commute_min?: number;
+  transport?: string;
+};
+
+function extractNotes(raw: Record<string, unknown> | null): { label: string; text: string }[] {
+  if (!raw) return [];
+  return Object.entries(raw).flatMap(([key, val]) => {
+    if (val == null) return [];
+    const label = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    if (typeof val === "string" && val.trim()) return [{ label, text: val.trim() }];
+    if (Array.isArray(val) && val.length > 0) return [{ label, text: val.map(String).join(", ") }];
+    if (typeof val === "object") {
+      const str = Object.values(val as Record<string, unknown>)
+        .filter((v) => v != null && String(v).trim())
+        .map(String)
+        .join(", ");
+      if (str) return [{ label, text: str }];
+    }
+    return [];
+  });
+}
+
 export function SearchProfilePanel({ profile, projectId }: SearchProfilePanelProps) {
   const city = profile?.preferred_cities?.[0] ?? null;
   const budget = profile?.budget_target_pln ?? null;
   const rooms = profile?.rooms_preferred ?? null;
   const area = profile?.area_m2_preferred ?? null;
   const districts = profile?.preferred_districts ?? [];
+  const neighbourhoods = profile?.preferred_neighbourhoods ?? [];
   const features = profile?.preferred_features ?? [];
   const dislikes = profile?.disliked_features ?? [];
   const availability = profile?.availability_preferred ?? null;
+  const offerType = profile?.preferred_offer_type ?? null;
+  const heatingTypes = profile?.preferred_heating_types ?? [];
+  const importantLocations = (profile?.important_locations ?? []) as ImportantLocation[];
+  const notes = extractNotes(profile?.raw_requirements ?? null);
 
   const isReady = !!(city && budget && rooms);
   const hasAnyData = !!(city || budget || rooms || area);
@@ -74,9 +104,34 @@ export function SearchProfilePanel({ profile, projectId }: SearchProfilePanelPro
           />
         </div>
 
+        {/* Location & commute */}
+        {importantLocations.length > 0 && (
+          <div>
+            <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest mb-2">
+              Commute / Locations
+            </p>
+            <div className="flex flex-col gap-2">
+              {importantLocations.map((loc, i) => (
+                <div key={i} className="bg-[#eff4ff] rounded-lg px-4 py-3 text-sm text-[#0d1c2e]">
+                  <span className="font-semibold capitalize">{loc.name ?? "Location"}</span>
+                  {loc.address && <span className="text-[#454652]"> — {loc.address}</span>}
+                  {(loc.max_commute_min != null || loc.transport) && (
+                    <span className="text-[#767683] text-xs ml-1">
+                      ({[loc.max_commute_min != null ? `${loc.max_commute_min} min` : null, loc.transport].filter(Boolean).join(", ")})
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Secondary fields — shown when filled */}
         {districts.length > 0 && (
           <TagField label="Preferred Districts" tags={districts} color="blue" />
+        )}
+        {neighbourhoods.length > 0 && (
+          <TagField label="Preferred Neighbourhoods" tags={neighbourhoods} color="blue" />
         )}
         {features.length > 0 && (
           <TagField label="Must Have" tags={features} color="green" />
@@ -84,8 +139,31 @@ export function SearchProfilePanel({ profile, projectId }: SearchProfilePanelPro
         {dislikes.length > 0 && (
           <TagField label="Deal-Breakers" tags={dislikes} color="red" />
         )}
+        {heatingTypes.length > 0 && (
+          <TagField label="Heating" tags={heatingTypes} color="blue" />
+        )}
+        {offerType && (
+          <ProfileField label="Offer Type" value={offerType} placeholder="" />
+        )}
         {availability && (
           <ProfileField label="Move-in" value={availability} placeholder="" />
+        )}
+
+        {/* Free-form notes from raw_requirements */}
+        {notes.length > 0 && (
+          <div>
+            <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest mb-2">
+              Notes
+            </p>
+            <div className="flex flex-col gap-2">
+              {notes.map(({ label, text }) => (
+                <div key={label} className="bg-[#f8fafc] border border-[rgba(198,197,212,0.4)] rounded-lg px-4 py-3">
+                  <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-wider mb-1">{label}</p>
+                  <p className="text-[#0d1c2e] text-sm leading-relaxed">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 

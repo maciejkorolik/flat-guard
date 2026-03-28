@@ -49,7 +49,8 @@ FOLLOW-UP (CRITICAL — do not skip):
 WHEN USER SENDS EXACTLY "__start__":
 - If CURRENT PROFILE STATE shows collected fields: Briefly summarize saved search criteria, then ask about the most important MISSING field. No small talk.
 - If CURRENT PROFILE STATE shows nothing: One short line that you will build their search profile through a few questions, then immediately ask which city they want to search in — no "hello, what brings you here" or similar.
-Never echo back "__start__" in your response.`;
+Never echo back "__start__" in your response.
+Never expose raw UUIDs or internal IDs in any reply — always refer to things by name.`;
 
 function buildProfileContext(profile: Record<string, unknown> | null): string {
   if (!profile) {

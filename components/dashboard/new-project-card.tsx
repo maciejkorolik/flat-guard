@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { Plus, Loader2 } from "lucide-react";
 
 export function NewProjectCard() {
   const router = useRouter();
+  const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (pathname === "/dashboard") setIsLoading(false);
+  }, [pathname]);
 
   async function handleCreate() {
     if (isLoading) return;
@@ -19,6 +24,7 @@ export function NewProjectCard() {
       });
       const { data, error } = await res.json();
       if (error) throw new Error(error);
+      setIsLoading(false);
       router.push(`/project/${data.id}/interview`);
     } catch {
       setIsLoading(false);

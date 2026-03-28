@@ -5,6 +5,7 @@ import { DefaultChatTransport } from "ai";
 import { useEffect, useRef, useMemo, useState } from "react";
 import { MessageSquare, Send, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAutosizeTextarea } from "@/lib/use-autosize-textarea";
 import { SearchProfilePanel } from "./search-profile-panel";
 import type { DbSearchProfile } from "@/lib/types/flatguard";
 
@@ -74,6 +75,7 @@ export function InterviewClient({ projectId, initialProfile }: InterviewClientPr
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasStarted = useRef(false);
+  const textareaRef = useAutosizeTextarea(input, { maxHeightPx: 180 });
 
   const { messages, status, sendMessage } = useChat({
     transport: new DefaultChatTransport({ api: `/api/interview/${projectId}` }),
@@ -191,6 +193,7 @@ export function InterviewClient({ projectId, initialProfile }: InterviewClientPr
           <form onSubmit={handleSubmit} className="relative">
             <div className="bg-white rounded-xl shadow-sm border border-[rgba(198,197,212,0.2)] pr-14 pl-5 py-3.5">
               <textarea
+                ref={textareaRef}
                 rows={1}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -204,7 +207,7 @@ export function InterviewClient({ projectId, initialProfile }: InterviewClientPr
               type="submit"
               disabled={!input.trim() || isStreaming}
               aria-label="Send message"
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-[#000666] rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-30"
+              className="absolute right-3 bottom-3 w-9 h-9 bg-[#000666] rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-30"
             >
               <Send size={14} className="text-white" />
             </button>
