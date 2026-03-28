@@ -151,15 +151,15 @@ Leave null unless the source explicitly exposes them and the parser was updated:
 - `living_room_features`
 - `nearby`
 
-## Review of Current Checked-In Results
+## Review of Current Local Results
 
-- `data/raw/olx_wroclaw_rentals_raw_20260328T112643436Z.jsonl`
+- `.local-data/olx/olx_wroclaw_rentals_raw_20260328T112643436Z.jsonl`
   - 170 rows
   - search-card coverage only
   - enough for `listings_raw`
   - enough for partial `listings_normalized` fields such as `source`, `external_id`, `url`, `title`, `rent_pln`, `city`, and some `district`
   - some historical rows still carry OLX query params in `listing_url`; the loader canonicalizes them
-- `data/raw/olx_wroclaw_rentals_raw_20260328T113702845Z.jsonl`
+- `.local-data/olx/olx_wroclaw_rentals_raw_20260328T113702845Z.jsonl`
   - 5 rows
   - enriched detail-page sample
   - fills many more normalized columns including `description`, `area_m2`, `rooms`, `floor`, `building_type`, `fees`, `has_elevator`, `is_furnished`, and `parking_type`
@@ -173,8 +173,24 @@ Use the repo loader to map current OLX JSONL into the production tables:
 
 ```bash
 psql "$SUPABASE_DB_URL" \
-  -v jsonl_path=/absolute/path/to/data/raw/olx_wroclaw_rentals_raw_<timestamp>.jsonl \
+  -v jsonl_path=/absolute/path/to/.local-data/olx/olx_wroclaw_rentals_raw_<timestamp>.jsonl \
   -f supabase/sql/load_olx_raw_jsonl.sql
+```
+
+Local compatibility and completeness checks:
+
+```bash
+npm run olx:completeness -- .local-data/olx/olx_wroclaw_rentals_raw_<timestamp>.jsonl
+```
+
+Remote completeness check after ingest:
+
+```bash
+psql "$SUPABASE_DB_URL" \
+  -v source_name=olx \
+  -f supabase/sql/report_olx_ingest_completeness.sql
+```
+```
 ```
 
 ## Run

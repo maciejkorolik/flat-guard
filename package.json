@@ -4,7 +4,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "olx:completeness": "node scripts/report-olx-ingest-completeness.mjs",
+    "olx:upload": "node scripts/upload-olx-jsonl-to-supabase.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.53",
