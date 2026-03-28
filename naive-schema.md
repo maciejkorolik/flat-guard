@@ -1,86 +1,136 @@
-# Naive Raw Source Schema
+# Listing Ingest Contract
 
-This file is the source-agnostic raw schema reference for adding future listing sources.
+This file keeps its old filename for compatibility, but it now documents the actual production-facing listing ingest contract.
 
-It is intentionally naive:
+Authoritative schema reference:
 
-- raw-first
-- source-agnostic
-- append-only
-- no normalization assumptions
-- no transformation logic
-
-Use it as the minimum contract when adding another crawler.
+- [docs/database-schema-reference.md](/Users/bruno/Desktop/work/hackathon/docs/database-schema-reference.md)
 
 ## Purpose
 
-Every source should be able to emit into the same raw contract before any downstream normalization.
+Scraping work in this repo feeds two listing tables:
 
-That means a crawler for OLX, Otodom, Gratka, Domiporta, or another source should all be able to produce these fields even if many values are null.
+- `public.listings_raw`
+- `public.listings_normalized`
 
-## Required Raw Fields
+`listings_raw` stores the untouched source evidence.
 
-| Field | Type | Meaning |
+`listings_normalized` stores the typed facts used by search, ranking, and shortlist features.
+
+## Required Scraper Landing Contract
+
+Every scraper run must be able to produce values for `public.listings_raw`:
+
+| Column | Type | Meaning |
 | --- | --- | --- |
-| `source` | text / enum | Source system identifier, for example `olx`, `otodom`, `gratka` |
-| `source_entity` | text | Kind of object being captured, for example `flat_rental_listing` |
-| `crawl_run_id` | uuid / text | Ingest run identifier shared by all rows from one crawl |
-| `source_listing_id` | text | Stable source-native listing id if available |
-| `source_url` | text | Canonical listing URL |
-| `search_url` | text | Search page URL that produced the row |
-| `search_city` | text | Search city used by the crawl |
-| `search_region` | text | Search region or broader area label |
-| `search_page` | integer | Page number that produced the row |
-| `position_on_page` | integer | Listing position within the page |
-| `listing_title` | text | Raw listing title |
-| `listing_price_amount` | numeric | Parsed numeric price if present |
-| `listing_price_currency` | text | Currency code such as `PLN` |
-| `location_label` | text | Raw location text from the source |
-| `district` | text | Raw district text if directly available |
-| `street_hint` | text | Street hint explicitly exposed by the source or extracted from raw listing text |
-| `area_m2` | numeric | Raw parsed area if directly available |
-| `rooms` | numeric | Raw parsed room count if directly available |
-| `description_raw` | text | Full raw description when exposed on the listing detail page |
-| `image_urls_raw` | jsonb / array | Raw image links from the source listing |
-| `seller_name_raw` | text | Seller name as exposed by the source |
-| `seller_profile_url` | text | Seller profile URL if available |
-| `seller_member_since_raw` | text | Raw seller account-age text |
-| `seller_last_seen_raw` | text | Raw seller recency text |
-| `contact_phone_masked_raw` | text | Masked phone if the source hides the full number |
-| `contact_phone_raw` | text | Unmasked phone when actually exposed |
-| `contact_email_raw` | text | Email when actually exposed |
-| `raw_detail_payload` | jsonb | Full raw detail-page fragment or payload |
-| `is_promoted` | boolean | Whether the listing was marked as promoted |
-| `scraped_at` | timestamptz | When the row was captured |
-| `content_hash` | text | Hash of the raw record used for duplicate detection |
-| `raw_payload` | jsonb | Full source fragment or source record payload |
+| `source` | text | Source identifier such as `olx` |
+| `external_id` | text | Stable source-native listing identifier |
+| `raw_data` | jsonb | Full source record as collected by the crawler |
+| `scraped_at` | timestamptz | When the record was captured |
+| `normalized_id` | uuid | Nullable reference to `listings_normalized.id` once projection succeeds |
 
-## Rules
+Rules:
 
-- Keep original source facts in `raw_payload` even when typed columns are also filled.
-- Do not infer missing values.
-- Do not geocode, normalize districts, or harmonize currencies here.
-- Null is acceptable for any field that is not explicitly present in the source.
-- `source_listing_id` should prefer a stable native id over a derived hash.
-- `content_hash` should be derived from the raw record payload, not from normalized values.
+- keep all source-specific evidence in `raw_data`
+- do not collapse raw evidence into only typed fields
+- do not geocode or infer non-explicit facts during scraping
+- prefer null in normalized fields over weak guesses
 
-## Mapping Notes
+## Normalized Listing Contract
 
-- `source_listing_id` may come from:
-  - URL token
-  - HTML attribute
-  - JSON payload id
-  - fallback deterministic hash if the source has no exposed id
-- `location_label` should keep the source text as shown to users.
-- `district` should only be filled when the source explicitly exposes it.
-- `street_hint` should only be filled from explicit source text, not from geocoding.
-- `area_m2` and `rooms` should stay null unless the source page provides parseable values.
+Scrapers or loaders may project into the following `public.listings_normalized` columns when the source explicitly exposes the values:
 
-## Current Reference Implementation
+| Column | Meaning |
+| --- | --- |
+| `source` | Source identifier |
+| `external_id` | Source-native listing identifier |
+| `url` | Canonical listing URL |
+| `title` | Listing title |
+| `description` | Listing description |
+| `is_active` | Whether the listing is currently active at scrape time |
+| `first_seen_at` | First observed timestamp |
+| `last_seen_at` | Most recent observed timestamp |
+| `city` | City label |
+| `district` | District label |
+| `neighbourhood` | Finer-grained locality when explicit |
+| `address` | Street/address hint when explicit |
+| `lat` / `lng` / `location` | Spatial fields, leave null unless source explicitly provides them |
+| `area_m2` | Area |
+| `rooms` | Room count |
+| `floor` | Floor number |
+| `total_floors` | Building height if explicit |
+| `building_type` | Building type |
+| `offer_type` | For current rentals use `rent` |
+| `has_provision` | Broker commission flag |
+| `provision_total_pln` | Broker commission amount |
+| `rent_pln` | Monthly rent |
+| `deposit_pln` | Deposit amount |
+| `fees` | Structured JSON fees object |
+| `total_monthly_pln` | Rent plus explicit recurring fees |
+| `available_from` | Explicit availability date |
+| `has_balcony` / `has_terrace` / `has_elevator` / `has_storage_room` | Amenity booleans |
+| `is_furnished` | Furnishing flag |
+| `has_internet` / `has_tv` | Connectivity/media flags |
+| `heating_type` | Heating type |
+| `parking_type` | Parking description |
+| `kitchen_equipment` | Explicit kitchen equipment list |
+| `bathroom_features` | Explicit bathroom features |
+| `living_room_features` | Explicit living-space features |
+| `extra_features` | Explicit residual facts worth preserving as text labels |
+| `nearby` | Structured nearby places or POIs |
 
-The current Wroclaw OLX raw path should be treated as the first implementation of this contract:
+## Current OLX Field Mapping
 
+The current OLX crawler emits source-specific JSONL. Loaders should map it like this:
+
+| Crawler Field | `listings_raw` / `listings_normalized` Target |
+| --- | --- |
+| `source` | `listings_raw.source`, `listings_normalized.source` |
+| `listing_id` | `listings_raw.external_id`, `listings_normalized.external_id` |
+| `scraped_at_utc` | `listings_raw.scraped_at`, `listings_normalized.first_seen_at`, `listings_normalized.last_seen_at` |
+| full crawler row | `listings_raw.raw_data` |
+| `listing_url` | `listings_normalized.url` |
+| `title_raw` | `listings_normalized.title` |
+| `description_raw` | `listings_normalized.description` |
+| `area_m2_detail_raw` | `listings_normalized.area_m2` |
+| `rooms_detail_raw` | `listings_normalized.rooms` |
+| `floor_raw` | `listings_normalized.floor` |
+| `building_type_raw` | `listings_normalized.building_type` |
+| `price_numeric_raw` | `listings_normalized.rent_pln` |
+| `additional_rent_raw` | `listings_normalized.fees`, `listings_normalized.total_monthly_pln` |
+| `district_breadcrumb_raw` | `listings_normalized.district` |
+| `district_hint_raw` | `listings_normalized.neighbourhood` |
+| `street_hint_raw` | `listings_normalized.address` |
+| `elevator_raw` | `listings_normalized.has_elevator` |
+| `furnished_raw` | `listings_normalized.is_furnished` |
+| `parking_raw` | `listings_normalized.parking_type` |
+
+## Current OLX Gaps
+
+The present crawler does not reliably fill these normalized columns and should leave them null until explicit extraction exists:
+
+- `lat`
+- `lng`
+- `location`
+- `total_floors`
+- `has_provision`
+- `provision_total_pln`
+- `deposit_pln`
+- `available_from`
+- `has_balcony`
+- `has_terrace`
+- `has_storage_room`
+- `has_internet`
+- `has_tv`
+- `heating_type`
+- `kitchen_equipment`
+- `bathroom_features`
+- `living_room_features`
+- `nearby`
+
+## References
+
+- [docs/database-schema-reference.md](/Users/bruno/Desktop/work/hackathon/docs/database-schema-reference.md)
 - [subagent-scraping.md](/Users/bruno/Desktop/work/hackathon/subagent-scraping.md)
 - [docs/subagent-scraping.md](/Users/bruno/Desktop/work/hackathon/docs/subagent-scraping.md)
-- [20260328123500_raw_ingest.sql](/Users/bruno/Desktop/work/hackathon/supabase/migrations/20260328123500_raw_ingest.sql)
-- [load_olx_raw_jsonl.sql](/Users/bruno/Desktop/work/hackathon/supabase/sql/load_olx_raw_jsonl.sql)
+- [supabase/sql/load_olx_raw_jsonl.sql](/Users/bruno/Desktop/work/hackathon/supabase/sql/load_olx_raw_jsonl.sql)

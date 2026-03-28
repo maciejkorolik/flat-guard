@@ -33,3 +33,12 @@ When implementing AI features in this project:
 
 1. **Default: Use the Vercel AI SDK** (`ai` package) — this is the preferred approach for all AI functionality including text generation, streaming, tool calling, agents, and model integration.
 2. **Gemini API directly** — only use the Gemini API/SDK (`@google/genai`) when explicitly requested by the developer. Do not default to it.
+
+## Local Data References
+
+For listing ingestion, scraper outputs, normalization, and search persistence:
+
+- Read [docs/database-schema-reference.md](/Users/bruno/Desktop/work/hackathon/docs/database-schema-reference.md) first.
+- Use `public.listings_raw` as the scraper landing table.
+- Use `public.listings_normalized` as the canonical listing table used by search and shortlist flows.
+- Treat older references to `raw_ingest_runs` and `raw_rental_listings` as historical scaffolding unless a task explicitly asks for that legacy path.

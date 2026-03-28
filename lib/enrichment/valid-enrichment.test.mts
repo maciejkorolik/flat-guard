@@ -129,7 +129,10 @@ interface ValidEnrichmentSummary {
 }
 
 const DATASET_PATH = fileURLToPath(
-  new URL("../../data/raw/olx_wroclaw_rentals_raw_20260328T113702845Z.jsonl", import.meta.url),
+  new URL(
+    "../../../../../.local-data/olx/olx_wroclaw_rentals_raw_20260328T113702845Z.jsonl",
+    import.meta.url,
+  ),
 );
 
 const FIXTURE_LATITUDE = 51.120123;

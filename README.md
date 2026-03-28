@@ -10,7 +10,7 @@ Current scope:
 
 - raw acquisition only
 - first source: OLX Wroclaw rental listings
-- local Postgres raw storage with strong typing
+- Supabase/Postgres raw storage with strong typing
 - no normalization and no transformation logic in this branch
 
 Primary handoff files:
@@ -19,6 +19,7 @@ Primary handoff files:
 - [subagent-scraping.md](/Users/bruno/Desktop/work/hackathon/subagent-scraping.md) — working method and operational notes
 - [docs/subagent-scraping.md](/Users/bruno/Desktop/work/hackathon/docs/subagent-scraping.md) — concise crawler runbook
 - [20260328123500_raw_ingest.sql](/Users/bruno/Desktop/work/hackathon/supabase/migrations/20260328123500_raw_ingest.sql) — typed raw-ingest schema
+- [20260328134500_raw_ingest_detail_fields.sql](/Users/bruno/Desktop/work/hackathon/supabase/migrations/20260328134500_raw_ingest_detail_fields.sql) — detail-page field extensions for the raw listing table
 - [load_olx_raw_jsonl.sql](/Users/bruno/Desktop/work/hackathon/supabase/sql/load_olx_raw_jsonl.sql) — JSONL-to-Postgres loader
 - [crawl-olx-wroclaw-raw.mjs](/Users/bruno/Desktop/work/hackathon/scripts/crawl-olx-wroclaw-raw.mjs) — OLX Wroclaw raw crawler
 
