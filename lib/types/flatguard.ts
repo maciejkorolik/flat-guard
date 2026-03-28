@@ -133,6 +133,7 @@ export interface ScoredListing {
   listing: Pick<NormalizedListing,
     "id" | "title" | "city" | "district" | "address" | "url" |
     "rent_pln" | "total_monthly_pln" | "rooms" | "area_m2" | "floor" |
+    "lat" | "lng" |
     "has_balcony" | "has_elevator" | "is_furnished" | "parking_type" |
     "heating_type" | "offer_type" | "extra_features" | "available_from"
   >;
@@ -147,7 +148,7 @@ export interface DbShortlistEntry {
   project_id: string;
   listing_id: string;
   listing_snapshot: ScoredListing | { listing: NormalizedListing };
-  status: "saved" | "contacted" | "rejected";
+  status: "saved" | "contacted" | "rejected" | "rented";
   notes: string | null;
   created_at: string;
 }
