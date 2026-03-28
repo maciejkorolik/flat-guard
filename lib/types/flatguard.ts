@@ -142,6 +142,16 @@ export interface ScoredListing {
   recommendation: "strong" | "good" | "weak";
 }
 
+export interface DbShortlistEntry {
+  id: string;
+  project_id: string;
+  listing_id: string;
+  listing_snapshot: ScoredListing | { listing: NormalizedListing };
+  status: "saved" | "contacted" | "rejected";
+  notes: string | null;
+  created_at: string;
+}
+
 export interface DbSearchProfile {
   id: string;
   project_id: string;
