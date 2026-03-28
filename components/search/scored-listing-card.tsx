@@ -62,7 +62,7 @@ export function ScoredListingCard({
     >
       <div className="flex">
         {thumb && !thumbFailed && (
-          <div className="relative w-28 shrink-0 min-h-[140px] hidden sm:block bg-[#f1f5f9]">
+          <div className="relative w-36 shrink-0 min-h-[140px] hidden sm:block bg-[#f1f5f9]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={thumb}

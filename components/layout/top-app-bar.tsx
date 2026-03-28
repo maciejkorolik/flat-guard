@@ -11,7 +11,7 @@ interface TopAppBarProps {
 
 export function TopAppBar({ breadcrumbs = [] }: TopAppBarProps) {
   return (
-    <header className="fixed top-0 right-0 left-64 h-16 bg-white/70 backdrop-blur-xl border-b border-[rgba(226,232,240,0.2)] flex items-center justify-between px-8 z-10">
+    <header className="fixed top-0 right-0 left-52 h-16 bg-white/70 backdrop-blur-xl border-b border-[rgba(226,232,240,0.2)] flex items-center justify-between px-8 z-10">
       {/* Breadcrumbs */}
       <div className="flex items-center gap-6">
         {breadcrumbs.map((item, i) => (

@@ -231,10 +231,14 @@ export async function POST(
         },
       },
       addToShortlist: {
-        description: "Add a listing to the user's shortlist. Confirm the listing title before calling.",
+        description:
+          "Add a listing to the user's shortlist. Confirm the listing title before calling. " +
+          "notes is required: markdown for the shortlist page — why saved, ## Questions for the landlord (bullets), ## Things to double-check (bullets); use **bold** for key figures.",
         inputSchema: z.object({
           listing_id: z.string(),
-          notes: z.string().optional(),
+          notes: z
+            .string()
+            .min(1, "Provide markdown notes: why saved, questions for landlord, things to double-check."),
         }),
         execute: async ({ listing_id, notes }) => {
           const scored = scoredListings.find((s) => s.listing.id === listing_id);
@@ -258,7 +262,7 @@ export async function POST(
               listing_id,
               listing_snapshot: scored,
               status: "saved",
-              notes: notes ?? null,
+              notes,
             });
 
           if (error) return { error: error.message };

@@ -1,6 +1,7 @@
 import type { DbShortlistEntry, NormalizedListing, ScoredListing } from "@/lib/types/flatguard";
 import { BookmarkCheck, Calendar, ExternalLink, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CompactMarkdown } from "@/components/markdown/compact-markdown";
 
 interface ShortlistCardProps {
   entry: DbShortlistEntry;
@@ -102,7 +103,7 @@ export function ShortlistCard({ entry }: ShortlistCardProps) {
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[#767683] mb-1.5">
               Notes
             </p>
-            <p className="text-sm text-[#454652] leading-relaxed">{entry.notes}</p>
+            <CompactMarkdown className="text-sm text-[#454652]">{entry.notes}</CompactMarkdown>
           </div>
         )}
 

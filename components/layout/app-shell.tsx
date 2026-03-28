@@ -13,7 +13,7 @@ export function AppShell({ children, projectId, activeProject, breadcrumbs }: Ap
     <div className="min-h-screen bg-[#f8f9ff]">
       <SideNav projectId={projectId} activeProject={activeProject} />
       <TopAppBar breadcrumbs={breadcrumbs} />
-      <main className="pl-64 pt-16 min-h-screen">
+      <main className="pl-52 pt-16 min-h-screen">
         {children}
       </main>
     </div>

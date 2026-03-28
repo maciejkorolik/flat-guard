@@ -5,6 +5,7 @@ import { normalizeListingFromDb } from "@/lib/listing-normalize";
 import { z } from "zod";
 import type { NormalizedListing, ScoredListing } from "@/lib/types/flatguard";
 import { RESPOND_IN_ENGLISH_RULE } from "@/lib/ai-language-policy";
+import { SEARCH_LISTINGS_MAX } from "@/lib/search-listings-limit";
 
 const CITY_NAME_MAP: Record<string, string> = {
   warsaw: "Warszawa",
@@ -83,7 +84,7 @@ export async function POST(
     .select("*")
     .eq("is_active", true)
     .lt("rent_pln", 20000)
-    .limit(20);
+    .limit(SEARCH_LISTINGS_MAX);
 
   if (dbCity) query = query.ilike("city", `%${dbCity}%`);
   if (budget) query = query.lte("total_monthly_pln", Math.round(budget * 1.3));
