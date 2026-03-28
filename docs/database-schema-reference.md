@@ -197,6 +197,8 @@ Important fields for the current OLX ingest:
   - `geocode_location_type`
   - `geocode_result_types`
   - `geocode_partial_match`
+  - `geocode_lat`
+  - `geocode_lng`
   - `geocoded_at`
   - `weather_status`
   - `weather_summary_time`
@@ -228,7 +230,7 @@ Rules:
 
 - only write facts explicitly present in the source
 - prefer null over guesses
-- do not geocode into `lat`, `lng`, or `location` during the raw scrape
+- do not geocode into `lat`, `lng`, or `location` during the raw scrape; enrichment owns `geocode_lat` and `geocode_lng`
 - set `first_seen_at` and `last_seen_at` from scrape timestamps until a richer freshness pipeline exists
 - `fees` should stay structured JSON, not free text
 

@@ -58,8 +58,8 @@ interface FixtureGoogleClient {
   getHourlyForecast(args: LatLng & { hours: number }): Promise<Record<string, unknown>>;
   getCurrentAirQuality(args: LatLng): Promise<Record<string, unknown>>;
   getBuildingInsights(args: LatLng): Promise<Record<string, unknown>>;
-  searchPlacesByText(args: {
-    textQuery: string;
+  searchNearbyPlaces(args: {
+    includedTypes: string[];
     latitude: number;
     longitude: number;
     radiusMeters: number;
@@ -286,7 +286,7 @@ function buildValidGoogleClientFixture() {
     },
   };
 
-  const placesByQuery = new Map<string, GooglePlacesResponse>([
+  const placesBySearchKey = new Map<string, GooglePlacesResponse>([
     [
       "park",
       {
@@ -323,7 +323,7 @@ function buildValidGoogleClientFixture() {
       },
     ],
     [
-      "sklep spożywczy",
+      "grocery_store|supermarket|convenience_store|discount_store|discount_supermarket",
       {
         places: [
           {
@@ -340,32 +340,53 @@ function buildValidGoogleClientFixture() {
               longitude: 16.9715,
             },
           },
-        ],
-      },
-    ],
-    [
-      "biblioteka",
-      {
-        places: [
           {
-            id: "library-1",
-            name: "places/library-1",
+            id: "grocery-2",
+            name: "places/grocery-2",
             displayName: {
-              text: "Biblioteka Nowy Dwór",
+              text: "Lidl",
             },
-            formattedAddress: "ul. Rogowska 52A, Wrocław",
-            primaryType: "library",
-            types: ["library", "point_of_interest"],
+            formattedAddress: "ul. Strzegomska 88, Wrocław",
+            primaryType: "grocery_store",
+            types: ["grocery_store", "food", "point_of_interest"],
             location: {
-              latitude: 51.1178,
-              longitude: 16.9677,
+              latitude: 51.1172,
+              longitude: 16.9782,
+            },
+          },
+          {
+            id: "grocery-3",
+            name: "places/grocery-3",
+            displayName: {
+              text: "Żabka",
+            },
+            formattedAddress: "ul. Rogowska 14, Wrocław",
+            primaryType: "convenience_store",
+            types: ["convenience_store", "food", "point_of_interest"],
+            location: {
+              latitude: 51.1204,
+              longitude: 16.9729,
+            },
+          },
+          {
+            id: "grocery-4",
+            name: "places/grocery-4",
+            displayName: {
+              text: "Carrefour Express",
+            },
+            formattedAddress: "ul. Example 1, Wrocław",
+            primaryType: "convenience_store",
+            types: ["convenience_store", "food", "point_of_interest"],
+            location: {
+              latitude: 51.1189,
+              longitude: 16.9732,
             },
           },
         ],
       },
     ],
     [
-      "siłownia",
+      "gym|fitness_center",
       {
         places: [
           {
@@ -394,27 +415,6 @@ function buildValidGoogleClientFixture() {
             location: {
               latitude: 51.1232,
               longitude: 16.9812,
-            },
-          },
-        ],
-      },
-    ],
-    [
-      "coworking",
-      {
-        places: [
-          {
-            id: "coworking-1",
-            name: "places/coworking-1",
-            displayName: {
-              text: "Hub Coworking",
-            },
-            formattedAddress: "ul. Legnicka 48, Wrocław",
-            primaryType: "coworking_space",
-            types: ["coworking_space", "point_of_interest"],
-            location: {
-              latitude: 51.1121,
-              longitude: 16.9911,
             },
           },
         ],
@@ -455,16 +455,6 @@ function buildValidGoogleClientFixture() {
     ],
     [
       destinationKey({
-        latitude: 51.1178,
-        longitude: 16.9677,
-      }),
-      {
-        distanceMeters: 980,
-        durationSeconds: 760,
-      },
-    ],
-    [
-      destinationKey({
         latitude: 51.1168,
         longitude: 16.9758,
       }),
@@ -485,12 +475,22 @@ function buildValidGoogleClientFixture() {
     ],
     [
       destinationKey({
-        latitude: 51.1121,
-        longitude: 16.9911,
+        latitude: 51.1172,
+        longitude: 16.9782,
       }),
       {
-        distanceMeters: 2210,
-        durationSeconds: 1640,
+        distanceMeters: 860,
+        durationSeconds: 700,
+      },
+    ],
+    [
+      destinationKey({
+        latitude: 51.1204,
+        longitude: 16.9729,
+      }),
+      {
+        distanceMeters: 180,
+        durationSeconds: 150,
       },
     ],
   ]);
@@ -529,8 +529,8 @@ function buildValidGoogleClientFixture() {
       return buildingInsights;
     },
 
-    async searchPlacesByText({
-      textQuery,
+    async searchNearbyPlaces({
+      includedTypes,
       latitude,
       longitude,
       radiusMeters,
@@ -541,9 +541,10 @@ function buildValidGoogleClientFixture() {
       assert.ok(radiusMeters > 0);
       assert.equal(maxResultCount, 8);
 
-      const response = placesByQuery.get(textQuery);
-      assert.ok(response, `missing places fixture for query ${textQuery}`);
-      searchQueries.push(textQuery);
+      const searchKey = includedTypes.join("|");
+      const response = placesBySearchKey.get(searchKey);
+      assert.ok(response, `missing places fixture for search key ${searchKey}`);
+      searchQueries.push(searchKey);
       return response;
     },
 
@@ -578,7 +579,7 @@ function buildValidGoogleClientFixture() {
 
 async function buildValidEnrichmentFixture() {
   const listing = normalizeCrawlerRecord(loadRawCrawlerRecord("19IveV"));
-  const categories = resolveRequestedCategories(["gym", "coworking"]);
+  const categories = resolveRequestedCategories();
   const googleFixture = buildValidGoogleClientFixture();
 
   const enrichment = await enrichListing({
@@ -638,10 +639,11 @@ test("enrichListing builds a fully populated valid enrichment for a real dataset
   );
 
   assert.equal(typedEnrichment.proximityMatches.length, categories.length);
-  assert.deepEqual(
-    searchQueries,
-    categories.map((category) => category.textQuery),
-  );
+  assert.deepEqual(searchQueries, [
+    "park",
+    "gym|fitness_center",
+    "grocery_store|supermarket|convenience_store|discount_store|discount_supermarket",
+  ]);
 
   const park = typedEnrichment.proximityMatches.find(
     (match) => match.categoryKey === "park",
@@ -658,14 +660,14 @@ test("enrichListing builds a fully populated valid enrichment for a real dataset
   assert.equal(gym.placeName, "Factory Fitness");
   assert.equal(gym.walkingDurationSeconds, 540);
 
-  const coworking = typedEnrichment.proximityMatches.find(
-    (match) => match.categoryKey === "coworking",
+  const grocery = typedEnrichment.proximityMatches.find(
+    (match) => match.categoryKey === "grocery",
   );
-  assert.ok(coworking);
-  assert.equal(coworking.categorySource, "free_text_custom");
-  assert.equal(coworking.searchConfidence, "low");
-  assert.equal(coworking.placeName, "Hub Coworking");
-  assert.equal(coworking.walkingDurationSeconds, 1640);
+  assert.ok(grocery);
+  assert.equal(grocery.categorySource, "static");
+  assert.equal(grocery.searchConfidence, "high");
+  assert.equal(grocery.placeName, "Żabka");
+  assert.equal(grocery.walkingDurationSeconds, 150);
 });
 
 test("flattenEnrichmentForCsv keeps meaningful columns for a valid enrichment", async () => {
@@ -684,5 +686,5 @@ test("flattenEnrichmentForCsv keeps meaningful columns for a valid enrichment", 
   assert.equal(row.park_place_name, "Park Tysiąclecia");
   assert.equal(row.park_walk_minutes, 7);
   assert.equal(row.gym_place_name, "Factory Fitness");
-  assert.equal(row.coworking_place_name, "Hub Coworking");
+  assert.equal(row.grocery_place_name, "Żabka");
 });

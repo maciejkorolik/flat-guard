@@ -62,7 +62,6 @@ function loadLocalEnvFiles() {
 function parseArgs(argv) {
   const args = {
     batchSize: 20,
-    categories: [],
     limit: null,
     onlyMissing: true,
     outDir: "data/enriched",
@@ -78,12 +77,6 @@ function parseArgs(argv) {
 
     if (arg === "--batch-size" && next) {
       args.batchSize = Number.parseInt(next, 10);
-      index += 1;
-      continue;
-    }
-
-    if (arg === "--category" && next) {
-      args.categories.push(next);
       index += 1;
       continue;
     }
@@ -136,13 +129,12 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`Usage:
-  node scripts/enrich-listings-normalized-batches.mjs [--limit 20] [--batch-size 20] [--source olx] [--category gym]
+  node scripts/enrich-listings-normalized-batches.mjs [--limit 20] [--batch-size 20] [--source olx]
 
 Options:
   --limit <n>              Max listings to process. Default: all matching rows.
   --batch-size <n>         Rows per batch. Default: 20.
   --source <value>         Restrict to one listings_normalized source.
-  --category <value>       Add curated or free-text proximity categories. Repeatable.
   --qualified-only         Only process rows with enough input to build a geocode query.
   --print-results          Print per-listing enrichment summaries to stdout.
   --all                    Re-enrich all selected rows, not just rows missing enrichment.
@@ -234,6 +226,14 @@ function buildPotentialIssues(enrichment) {
         issues.push({
           scope: "proximity",
           category_key: match.categoryKey,
+          api: match.placePayload?.api || null,
+          provider_status:
+            match.placePayload?.status || match.routePayload?.status || null,
+          provider_error_message:
+            match.placePayload?.error_message ||
+            match.placePayload?.error ||
+            match.routePayload?.error ||
+            null,
           route_condition: match.routeCondition,
           place_name: match.placeName,
         });
@@ -373,7 +373,7 @@ async function main() {
   const updateColumns = new Set(
     intersectColumnNames(NORMALIZED_ENRICHMENT_OUTPUT_COLUMNS, normalizedColumns),
   );
-  const categories = resolveRequestedCategories(args.categories);
+  const categories = resolveRequestedCategories();
   const googleClient = createGoogleMapsClient({
     apiKey: process.env.GOOGLE_MAPS_API_KEY,
   });

@@ -34,9 +34,8 @@ Current scope:
 - short-horizon air-quality snapshot
 - conservative sunlight estimate with confidence and reasons
 - nearest lifestyle places ranked by walking time
-- baseline proximity categories: park, grocery, library
-- curated extra categories: gym, climbing
-- optional free-text custom categories
+- static proximity categories: park, gym, grocery
+  grocery is limited to nearby Biedronka, Lidl, and Żabka matches
 
 What the enrichment runner actually does:
 
@@ -45,7 +44,7 @@ What the enrichment runner actually does:
 3. Resolves coordinates with Google Geocoding or marks the row as `insufficient_input`, `zero_results`, or `failed`.
 4. Fetches short-horizon weather and air-quality snapshots for successfully geocoded listings.
 5. Builds a conservative sunlight estimate from location context, Google solar data, and listing text hints. This is an estimate for how sunny the area and listing may feel, not a factual flat orientation.
-6. Finds the closest lifestyle places for baseline and user-requested categories by combining Google Places candidate search with walking-time ranking from Google Routes.
+6. Finds the closest park, gym, and selected grocery brands by combining Places Nearby Search with walking-time ranking from Google Routes.
 7. Persists run-level and listing-level enrichment records to Supabase and can also emit JSONL, CSV, and metadata artifacts under `data/enriched/`.
 
 Stored outputs:
@@ -89,7 +88,7 @@ The enrichment CLI auto-loads `.env.local` and `.env` from the current worktree 
 Run against the latest DB rows:
 
 ```bash
-node scripts/enrich-rental-listings-google.mjs --limit 10 --source olx.pl --category gym
+node scripts/enrich-rental-listings-google.mjs --limit 10 --source olx.pl
 ```
 
 Environment required for enrichment:

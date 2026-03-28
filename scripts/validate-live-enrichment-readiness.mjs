@@ -85,6 +85,16 @@ const RECOMMENDED_NORMALIZED_COLUMNS = [
     reason: "flags approximate geocodes that should be treated more conservatively",
   },
   {
+    name: "geocode_lat",
+    type: "double precision",
+    reason: "stores the current geocoded latitude so nearby amenity search can reuse coordinates",
+  },
+  {
+    name: "geocode_lng",
+    type: "double precision",
+    reason: "stores the current geocoded longitude so nearby amenity search can reuse coordinates",
+  },
+  {
     name: "geocoded_at",
     type: "timestamptz",
     reason: "timestamps the latest geocoding snapshot",
@@ -430,32 +440,34 @@ function buildFakeGoogleClient() {
       };
     },
 
-    async searchPlacesByText({ textQuery, latitude, longitude }) {
+    async searchNearbyPlaces({ includedTypes, latitude, longitude }) {
+      const typeKey = includedTypes.join("-");
       return {
         places: [
           {
-            id: `${slugify(textQuery)}-1`,
-            name: `places/${slugify(textQuery)}-1`,
+            id: `${slugify(typeKey)}-1`,
+            name: `places/${slugify(typeKey)}-1`,
             displayName: {
-              text: `${textQuery} One`,
+              text: `${includedTypes[0]} One`,
             },
             formattedAddress: "Fixture A",
-            primaryType: "point_of_interest",
-            types: ["point_of_interest"],
+            primaryType: includedTypes[0],
+            types: includedTypes,
             location: {
               latitude: latitude + 0.002,
               longitude: longitude + 0.002,
             },
           },
           {
-            id: `${slugify(textQuery)}-2`,
-            name: `places/${slugify(textQuery)}-2`,
+            id: `${slugify(typeKey)}-2`,
+            name: `places/${slugify(typeKey)}-2`,
             displayName: {
-              text: `${textQuery} Two`,
+              text:
+                includedTypes[0] === "grocery_store" ? "Żabka" : `${includedTypes[0]} Two`,
             },
             formattedAddress: "Fixture B",
-            primaryType: "point_of_interest",
-            types: ["point_of_interest"],
+            primaryType: includedTypes[0],
+            types: includedTypes,
             location: {
               latitude: latitude + 0.001,
               longitude: longitude + 0.001,
@@ -592,7 +604,7 @@ async function main() {
   });
 
   const readyCount = readinessRows.filter((row) => row.geocode_status === "ready").length;
-  const categories = resolveRequestedCategories([]);
+  const categories = resolveRequestedCategories();
   const fakeGoogleClient = buildFakeGoogleClient();
   const enrichmentResults = [];
 

@@ -55,7 +55,6 @@ function parseArgs(argv) {
   const args = {
     inputFile: null,
     outDir: "data/enriched",
-    categories: [],
     limit: null,
     source: null,
     skipDbWrites: false,
@@ -81,12 +80,6 @@ function parseArgs(argv) {
 
     if (arg === "--out-dir" && next) {
       args.outDir = next;
-      index += 1;
-      continue;
-    }
-
-    if (arg === "--category" && next) {
-      args.categories.push(next);
       index += 1;
       continue;
     }
@@ -123,14 +116,13 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`Usage:
-  node scripts/enrich-rental-listings-google.mjs --input-file data/raw/<file>.jsonl [--category gym] [--category "climbing gym"]
-  node scripts/enrich-rental-listings-google.mjs --limit 10 [--source olx.pl] [--category gym]
+  node scripts/enrich-rental-listings-google.mjs --input-file data/raw/<file>.jsonl
+  node scripts/enrich-rental-listings-google.mjs --limit 10 [--source olx.pl]
 
 Options:
   --input-file <path>      Read crawler JSONL rows from disk.
   --limit <n>              Restrict the number of rows processed. Required in DB mode.
   --source <value>         Filter DB mode to one listings_raw source value.
-  --category <value>       Add curated or free-text proximity categories. Repeatable.
   --out-dir <path>         Directory for JSONL/CSV/meta outputs. Default: data/enriched
   --skip-db-writes         Do not create enrichment_runs or insert enrichment tables.
   --skip-file-writes       Do not emit JSONL/CSV/meta output files.
@@ -216,7 +208,7 @@ async function main() {
     const googleClient = createGoogleMapsClient({
       apiKey: process.env.GOOGLE_MAPS_API_KEY,
     });
-    const categories = resolveRequestedCategories(args.categories);
+    const categories = resolveRequestedCategories();
 
     const listings =
       sourceMode === "file"

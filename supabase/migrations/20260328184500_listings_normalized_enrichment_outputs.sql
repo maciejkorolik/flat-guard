@@ -8,6 +8,8 @@ alter table public.listings_normalized
   add column if not exists geocode_location_type text,
   add column if not exists geocode_result_types jsonb,
   add column if not exists geocode_partial_match boolean,
+  add column if not exists geocode_lat double precision,
+  add column if not exists geocode_lng double precision,
   add column if not exists geocoded_at timestamptz,
   add column if not exists weather_status public.enrichment_signal_status,
   add column if not exists weather_summary_time timestamptz,
