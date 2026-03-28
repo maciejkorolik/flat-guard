@@ -69,6 +69,7 @@ function parseArgs(argv) {
     qualifiedOnly: false,
     skipDbWrites: false,
     source: null,
+    districtFallbackMissingAddressOnly: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -109,6 +110,11 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (arg === "--district-fallback-missing-address-only") {
+      args.districtFallbackMissingAddressOnly = true;
+      continue;
+    }
+
     if (arg === "--all") {
       args.onlyMissing = false;
       continue;
@@ -136,6 +142,8 @@ Options:
   --batch-size <n>         Rows per batch. Default: 20.
   --source <value>         Restrict to one listings_normalized source.
   --qualified-only         Only process rows with enough input to build a geocode query.
+  --district-fallback-missing-address-only
+                           Only process rows with missing address + missing coords and geocode them from district/city with slight scatter.
   --print-results          Print per-listing enrichment summaries to stdout.
   --all                    Re-enrich all selected rows, not just rows missing enrichment.
   --skip-db-writes         Validate and dump issues without updating listings_normalized.
@@ -392,7 +400,8 @@ async function main() {
       limit: Math.min(200, remaining),
       offset,
       source: args.source,
-      onlyMissing: args.onlyMissing,
+      onlyMissing: args.districtFallbackMissingAddressOnly ? false : args.onlyMissing,
+      missingAddressWithoutCoordsOnly: args.districtFallbackMissingAddressOnly,
     });
 
     if (!page.length) {
@@ -400,7 +409,9 @@ async function main() {
     }
 
     scannedRows += page.length;
-    const eligibleRows = args.qualifiedOnly
+    const eligibleRows = args.districtFallbackMissingAddressOnly
+      ? page
+      : args.qualifiedOnly
       ? page.filter(
           (listing) => describeGeocodeQueryRequirements(listing).isReady,
         )
@@ -429,6 +440,11 @@ async function main() {
   );
   if (args.qualifiedOnly) {
     console.log(`Scanned ${scannedRows} rows to find geocode-qualified listings.`);
+  }
+  if (args.districtFallbackMissingAddressOnly) {
+    console.log(
+      `Scanned ${scannedRows} rows to find listings missing both address and coordinates.`,
+    );
   }
   console.log(
     `Enrichment update columns available: ${Array.from(updateColumns).join(", ") || "none"}`,
@@ -468,6 +484,7 @@ async function main() {
           googleClient,
           listing,
           categories,
+          allowDistrictFallback: args.districtFallbackMissingAddressOnly,
         });
       } catch (error) {
         enrichment = buildFailureResult(listing, error);
