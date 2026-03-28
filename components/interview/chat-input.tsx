@@ -26,11 +26,13 @@ export function ChatInput({ onSend, placeholder = "Type your response..." }: Cha
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder={placeholder}
+          aria-label="Chat message"
           className="w-full outline-none text-[#0d1c2e] placeholder-[#6b7280] bg-transparent text-sm"
         />
       </div>
       <button
         type="submit"
+        aria-label="Send message"
         className="absolute right-3 top-3 w-8 h-8 bg-[#000666] rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity"
       >
         <Send size={14} className="text-white" />

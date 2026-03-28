@@ -9,6 +9,7 @@ export default function InterviewPage() {
   // TODO: fetch profile from DB: supabase.from('search_profiles').select().eq('project_id', id).single()
   const messages = MOCK_CHAT_MESSAGES;
   const profile = MOCK_SEARCH_PROFILE;
+  // TODO: when real data is wired, profile will be SearchProfile | null — replace this with a null check
   const hasProfile = profile.city !== "";
 
   return (

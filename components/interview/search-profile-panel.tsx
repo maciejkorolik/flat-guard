@@ -29,9 +29,9 @@ export function SearchProfilePanel({ profile, isReady = false }: SearchProfilePa
       <div className="flex-1 overflow-y-auto px-8 py-8 flex flex-col gap-8">
         {/* Target City — always shown */}
         <div className="relative">
-          <label className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-3">
+          <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-3">
             Target City
-          </label>
+          </p>
           <div className="bg-[#eff4ff] rounded-lg px-4 py-3 text-sm text-[#6b7280] flex items-center justify-between">
             <span>{profile?.city || "Awaiting selection..."}</span>
             {!profile?.city && (
@@ -53,38 +53,38 @@ export function SearchProfilePanel({ profile, isReady = false }: SearchProfilePa
         ) : (
           <div className="flex flex-col gap-6">
             <div>
-              <label className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">
+              <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">
                 Monthly Budget
-              </label>
+              </p>
               <div className="bg-[#eff4ff] rounded-lg px-4 py-3 text-sm font-semibold text-[#0d1c2e]">
                 €{profile.budgetMonthly.toLocaleString()}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Min Rooms</label>
+                <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Min Rooms</p>
                 <div className="bg-[#eff4ff] rounded-lg px-4 py-3 text-sm font-semibold text-[#0d1c2e]">{profile.minRooms}+</div>
               </div>
               <div>
-                <label className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Min Area</label>
+                <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Min Area</p>
                 <div className="bg-[#eff4ff] rounded-lg px-4 py-3 text-sm font-semibold text-[#0d1c2e]">{profile.minAreaM2} m²</div>
               </div>
             </div>
             {profile.preferredDistricts.length > 0 && (
               <div>
-                <label className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Preferred Districts</label>
+                <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Preferred Districts</p>
                 <div className="flex flex-wrap gap-2">
                   {profile.preferredDistricts.map((d) => (
                     <span key={d} className="bg-[#eff4ff] text-[#000666] text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1">
                       {d}
-                      <X size={10} className="cursor-pointer" />
+                      <X size={10} />
                     </span>
                   ))}
                 </div>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <label className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest">Pets Allowed</label>
+              <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest">Pets Allowed</p>
               <div className={cn(
                 "w-10 h-6 rounded-full flex items-center px-1 transition-colors",
                 profile.petsAllowed ? "bg-[#006b5f]" : "bg-gray-200"
@@ -97,7 +97,7 @@ export function SearchProfilePanel({ profile, isReady = false }: SearchProfilePa
             </div>
             {profile.dealBreakers.length > 0 && (
               <div>
-                <label className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Deal-Breakers</label>
+                <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Deal-Breakers</p>
                 <div className="bg-red-50 rounded-lg p-3 flex flex-wrap gap-2">
                   {profile.dealBreakers.map((d) => (
                     <span key={d} className="text-red-700 text-xs font-medium">{d}</span>
@@ -120,7 +120,7 @@ export function SearchProfilePanel({ profile, isReady = false }: SearchProfilePa
               : "bg-gradient-to-r from-[#000666] to-[#1a237e] text-white hover:opacity-90"
           )}
         >
-          🚀 Run Search Profile
+          <span aria-hidden="true">🚀</span> Run Search Profile
         </button>
       </div>
     </div>
