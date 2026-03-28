@@ -58,7 +58,7 @@ export async function GET(
     .select("*")
     .eq("is_active", true)
     .lt("rent_pln", 20000)
-    .limit(20);
+    .limit(10);
 
   if (dbCity) query = query.ilike("city", `%${dbCity}%`);
   if (budget) query = query.lte("total_monthly_pln", Math.round(budget * 1.3));
