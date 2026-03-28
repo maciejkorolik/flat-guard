@@ -4,7 +4,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "upload:raw:listings": "node scripts/upload-raw-listings-to-supabase.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.53",

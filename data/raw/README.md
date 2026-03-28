@@ -25,3 +25,8 @@ Checked-in files:
 Artifacts stay in crawler JSONL/CSV format. The loader maps them into `public.listings_raw` and projects explicit typed fields into `public.listings_normalized`.
 
 All other local crawl outputs are intentionally ignored so repeated crawler runs do not pollute commits.
+
+Direct upload helper:
+
+- [docs/raw-listings-upload.md](/Users/bruno/Desktop/work/hackathon/.dmux/worktrees/dmux-1774705289774/docs/raw-listings-upload.md)
+- `node scripts/upload-raw-listings-to-supabase.mjs`

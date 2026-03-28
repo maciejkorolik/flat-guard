@@ -20,6 +20,7 @@ Primary handoff files:
 - [docs/subagent-scraping.md](/Users/bruno/Desktop/work/hackathon/docs/subagent-scraping.md) — concise crawler runbook
 - [20260328123500_raw_ingest.sql](/Users/bruno/Desktop/work/hackathon/supabase/migrations/20260328123500_raw_ingest.sql) — typed raw-ingest schema
 - [load_olx_raw_jsonl.sql](/Users/bruno/Desktop/work/hackathon/supabase/sql/load_olx_raw_jsonl.sql) — JSONL-to-Postgres loader
+- [raw-listings-upload.md](/Users/bruno/Desktop/work/hackathon/.dmux/worktrees/dmux-1774705289774/docs/raw-listings-upload.md) — service-key uploader for `public.listings_raw`
 - [crawl-olx-wroclaw-raw.mjs](/Users/bruno/Desktop/work/hackathon/scripts/crawl-olx-wroclaw-raw.mjs) — OLX Wroclaw raw crawler
 
 ## Layouts
