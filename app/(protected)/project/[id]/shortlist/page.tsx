@@ -10,8 +10,6 @@ interface ShortlistPageProps {
 
 interface ListingLocationRow {
   id: string;
-  lat: number | string | null;
-  lng: number | string | null;
   geocode_lat: number | string | null;
   geocode_lng: number | string | null;
   title: string | null;
@@ -50,10 +48,14 @@ export default async function ShortlistPage({ params }: ShortlistPageProps) {
 
   let locations: ListingLocationRow[] = [];
   if (listingIds.length > 0) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("listings_normalized")
-      .select("id, lat, lng, geocode_lat, geocode_lng, title, address, district, city")
+      .select("id, geocode_lat, geocode_lng, title, address, district, city")
       .in("id", listingIds);
+
+    if (error) {
+      throw new Error(error.message);
+    }
 
     locations = (data ?? []) as ListingLocationRow[];
   }
@@ -63,10 +65,10 @@ export default async function ShortlistPage({ params }: ShortlistPageProps) {
     const liveLocation = locationById.get(entry.listing_id);
     const snapshotListing = entry.listing_snapshot.listing;
     const lat = toNullableNumber(
-      liveLocation?.lat ?? liveLocation?.geocode_lat ?? snapshotListing.lat ?? null
+      liveLocation?.geocode_lat ?? snapshotListing.lat ?? null
     );
     const lng = toNullableNumber(
-      liveLocation?.lng ?? liveLocation?.geocode_lng ?? snapshotListing.lng ?? null
+      liveLocation?.geocode_lng ?? snapshotListing.lng ?? null
     );
 
     if (lat == null || lng == null) {
