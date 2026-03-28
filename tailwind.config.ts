@@ -70,6 +70,7 @@ export default {
       fontFamily: {
         manrope: ["var(--font-manrope)", "sans-serif"],
         inter: ["var(--font-inter)", "sans-serif"],
+        geist: ["var(--font-geist-sans)", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
