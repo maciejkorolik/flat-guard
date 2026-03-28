@@ -5,6 +5,7 @@ interface FilterItem {
   color: "blue" | "green";
 }
 
+// TODO: wire these values to the active search run's profile config
 const FILTERS: FilterItem[] = [
   { label: "Max Price", value: "€1,850", sublabel: "Max budget", color: "blue" },
   { label: "Min Area", value: "65 m²", sublabel: "Minimum", color: "blue" },

@@ -69,10 +69,12 @@ export function ListingCard({ listing }: ListingCardProps) {
         </div>
 
         <div className="border-t border-[rgba(198,197,212,0.1)] pt-4 flex gap-5 items-center">
-          <div className="flex items-center gap-1.5">
-            <CheckCircle size={12} className="text-[#006b5f]" />
-            <span className="text-[#006b5f] text-xs font-semibold">within budget</span>
-          </div>
+          {belowBudget && (
+            <div className="flex items-center gap-1.5">
+              <CheckCircle size={12} className="text-[#006b5f]" />
+              <span className="text-[#006b5f] text-xs font-semibold">within budget</span>
+            </div>
+          )}
           {listing.petsAllowed === null && (
             <div className="flex items-center gap-1.5">
               <AlertTriangle size={12} className="text-[#d97706]" />
