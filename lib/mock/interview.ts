@@ -1,6 +1,6 @@
 // TODO: replace with Supabase queries for chat history and search profile
 
-import { ChatMessage, SearchProfile, ShortlistEntry } from "@/lib/types/flatguard";
+import { ChatMessage, SearchProfile } from "@/lib/types/flatguard";
 
 export const MOCK_CHAT_MESSAGES: ChatMessage[] = [
   {
@@ -36,52 +36,3 @@ export const MOCK_SEARCH_PROFILE: SearchProfile = {
   mustHaves: ["furnished", "natural light"],
   dealBreakers: ["ground floor", "no elevator"],
 };
-
-export const MOCK_SHORTLIST: ShortlistEntry[] = [
-  {
-    id: "sl-1",
-    listing: {
-      id: "lst-1",
-      title: "Ixelles Panoramic Residence",
-      city: "Brussels",
-      district: "Ixelles",
-      address: "Place du Châtelain, Ixelles",
-      rentMonthly: 1450,
-      areaM2: 78,
-      rooms: 2,
-      floor: "4th Floor",
-      furnished: true,
-      petsAllowed: null,
-      verifiedAgent: true,
-      imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&q=80",
-      matchScore: 94,
-      budgetDelta: -150,
-    },
-    status: "contacted",
-    notes: "Very promising. Follow up on pet policy.",
-    gaps: 1,
-  },
-  {
-    id: "sl-2",
-    listing: {
-      id: "lst-2",
-      title: "Saint-Gilles Loft Space",
-      city: "Brussels",
-      district: "Saint-Gilles",
-      address: "Rue de l'Hôtel des Monnaies, Saint-Gilles",
-      rentMonthly: 1700,
-      areaM2: 92,
-      rooms: 1,
-      floor: "Ground Floor",
-      furnished: false,
-      petsAllowed: true,
-      verifiedAgent: false,
-      imageUrl: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=400&q=80",
-      matchScore: 82,
-      budgetDelta: 0,
-    },
-    status: "saved",
-    notes: "",
-    gaps: 2,
-  },
-];
