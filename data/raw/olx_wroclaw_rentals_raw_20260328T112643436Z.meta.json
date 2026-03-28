@@ -1,0 +1,13 @@
+{
+  "crawl_run_id": "c0d434e0-b939-4d3c-85ab-055e74b99035",
+  "source": "olx.pl",
+  "city_query": "wroclaw",
+  "requested_target": 170,
+  "extracted_rows": 170,
+  "max_pages_requested": 12,
+  "scraped_at_utc": "2026-03-28T11:26:19.167Z",
+  "output_files": [
+    "data/raw/olx_wroclaw_rentals_raw_20260328T112643436Z.jsonl",
+    "data/raw/olx_wroclaw_rentals_raw_20260328T112643436Z.csv"
+  ]
+}

@@ -40,3 +40,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local postgres
+.postgres-data/
+
+# local crawl artifacts
+data/raw/*
+!data/raw/README.md
+!data/raw/olx_wroclaw_rentals_raw.sample.jsonl
+!data/raw/olx_wroclaw_rentals_raw_20260328T112643436Z.csv
+!data/raw/olx_wroclaw_rentals_raw_20260328T112643436Z.jsonl
+!data/raw/olx_wroclaw_rentals_raw_20260328T112643436Z.meta.json
+!data/raw/olx_wroclaw_rentals_raw_20260328T113702845Z.csv
+!data/raw/olx_wroclaw_rentals_raw_20260328T113702845Z.jsonl
+!data/raw/olx_wroclaw_rentals_raw_20260328T113702845Z.meta.json

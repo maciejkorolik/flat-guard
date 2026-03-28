@@ -2,6 +2,26 @@
 
 Minimal starter for building quickly: **sign-in** (Google OAuth and email/password) and an **empty authenticated app**. Everything under `/` is protected except `/auth/*`.
 
+## Raw Scraping Workstream
+
+This repo now also contains the first raw-ingest path for flat-rental sourcing in Poland.
+
+Current scope:
+
+- raw acquisition only
+- first source: OLX Wroclaw rental listings
+- local Postgres raw storage with strong typing
+- no normalization and no transformation logic in this branch
+
+Primary handoff files:
+
+- [naive-schema.md](/Users/bruno/Desktop/work/hackathon/naive-schema.md) — source-agnostic raw contract for future crawlers
+- [subagent-scraping.md](/Users/bruno/Desktop/work/hackathon/subagent-scraping.md) — working method and operational notes
+- [docs/subagent-scraping.md](/Users/bruno/Desktop/work/hackathon/docs/subagent-scraping.md) — concise crawler runbook
+- [20260328123500_raw_ingest.sql](/Users/bruno/Desktop/work/hackathon/supabase/migrations/20260328123500_raw_ingest.sql) — typed raw-ingest schema
+- [load_olx_raw_jsonl.sql](/Users/bruno/Desktop/work/hackathon/supabase/sql/load_olx_raw_jsonl.sql) — JSONL-to-Postgres loader
+- [crawl-olx-wroclaw-raw.mjs](/Users/bruno/Desktop/work/hackathon/scripts/crawl-olx-wroclaw-raw.mjs) — OLX Wroclaw raw crawler
+
 ## Layouts
 
 | Area     | Path                         | Purpose                                                                           |

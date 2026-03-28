@@ -108,6 +108,7 @@ Deliverables:
 - source provenance and freshness fields
 - dedupe key on `(source, externalId)`
 - sample seeded dataset large enough for a convincing demo
+- raw-source contract aligned to [naive-schema.md](/Users/bruno/Desktop/work/hackathon/naive-schema.md)
 
 Boundaries:
 - no ranking logic
@@ -118,6 +119,7 @@ Handoff contract to transformation:
 - stable `ListingNormalized` schema
 - import job result contract
 - documented nullability and source-freshness semantics
+- raw-ingest compatibility documented against [naive-schema.md](/Users/bruno/Desktop/work/hackathon/naive-schema.md)
 
 Suggested staffing:
 - 2 people
