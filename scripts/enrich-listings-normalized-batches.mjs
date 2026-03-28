@@ -5,7 +5,10 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createGoogleMapsClient } from "../lib/enrichment/google-maps.mjs";
 import { resolveRequestedCategories } from "../lib/enrichment/category-config.mjs";
-import { enrichListing } from "../lib/enrichment/pipeline.mjs";
+import {
+  describeGeocodeQueryRequirements,
+  enrichListing,
+} from "../lib/enrichment/pipeline.mjs";
 import {
   NORMALIZED_ENRICHMENT_OUTPUT_COLUMNS,
   buildNormalizedEnrichmentUpdate,
@@ -63,6 +66,8 @@ function parseArgs(argv) {
     limit: null,
     onlyMissing: true,
     outDir: "data/enriched",
+    printResults: false,
+    qualifiedOnly: false,
     skipDbWrites: false,
     source: null,
   };
@@ -92,6 +97,16 @@ function parseArgs(argv) {
     if (arg === "--out-dir" && next) {
       args.outDir = next;
       index += 1;
+      continue;
+    }
+
+    if (arg === "--print-results") {
+      args.printResults = true;
+      continue;
+    }
+
+    if (arg === "--qualified-only") {
+      args.qualifiedOnly = true;
       continue;
     }
 
@@ -128,6 +143,8 @@ Options:
   --batch-size <n>         Rows per batch. Default: 20.
   --source <value>         Restrict to one listings_normalized source.
   --category <value>       Add curated or free-text proximity categories. Repeatable.
+  --qualified-only         Only process rows with enough input to build a geocode query.
+  --print-results          Print per-listing enrichment summaries to stdout.
   --all                    Re-enrich all selected rows, not just rows missing enrichment.
   --skip-db-writes         Validate and dump issues without updating listings_normalized.
   --out-dir <path>         Directory for issue/meta output. Default: data/enriched
@@ -239,6 +256,60 @@ function dedupeIssueEntries(entries) {
   });
 }
 
+function formatNumber(value, digits = 1) {
+  return Number.isFinite(value) ? Number(value).toFixed(digits) : "n/a";
+}
+
+function formatMinutes(seconds) {
+  return Number.isFinite(seconds) ? Math.round(seconds / 60) : null;
+}
+
+function printEnrichmentResult(enrichment, issues) {
+  const listing = enrichment.listing;
+  const summaryParts = [
+    `${listing.source}:${listing.sourceListingId}`,
+    listing.listingTitle || "(untitled)",
+    `${listing.streetHintRaw || "no-street"} | ${listing.district || "no-district"} | ${listing.searchCity || "no-city"}`,
+  ];
+  console.log(summaryParts.join(" | "));
+
+  console.log(
+    `  geocode=${enrichment.geocode.status} query=${enrichment.geocode.query || "n/a"} address=${enrichment.geocode.formattedAddress || "n/a"}`,
+  );
+  console.log(
+    `  weather=${enrichment.weather.status} temp_c=${formatNumber(enrichment.weather.snapshot?.temperatureC)} rain_12h=${enrichment.weather.snapshot?.next12hRainHourCount ?? "n/a"}`,
+  );
+  console.log(
+    `  air_quality=${enrichment.airQuality.status} aqi=${formatNumber(enrichment.airQuality.snapshot?.aqiValue, 0)} category=${enrichment.airQuality.snapshot?.aqiCategory || "n/a"}`,
+  );
+  console.log(
+    `  sunlight=${enrichment.sunlight.status} score=${formatNumber(enrichment.sunlight.score)} confidence=${enrichment.sunlight.confidence || "n/a"} orientation=${enrichment.sunlight.estimatedOrientationHint || "n/a"}`,
+  );
+
+  const proximitySummary = enrichment.proximityMatches
+    .map((match) => {
+      const minutes = formatMinutes(match.walkingDurationSeconds);
+      return `${match.categoryKey}:${match.placeName || "none"}:${minutes ?? "n/a"}m:${match.routeCondition}`;
+    })
+    .join(" | ");
+  console.log(`  proximity=${proximitySummary || "n/a"}`);
+
+  if (issues.length) {
+    const issueSummary = issues
+      .map((issue) => {
+        const detail =
+          issue.provider_error_message ||
+          issue.provider_status ||
+          issue.route_condition ||
+          issue.status ||
+          "n/a";
+        return `${issue.scope}:${detail}`;
+      })
+      .join(" | ");
+    console.log(`  issues=${issueSummary}`);
+  }
+}
+
 async function writeIssueArtifacts({ outDir, outputStem, issues, meta }) {
   await mkdir(outDir, { recursive: true });
 
@@ -309,6 +380,7 @@ async function main() {
 
   let targetRows = [];
   let offset = 0;
+  let scannedRows = 0;
   while (true) {
     const remaining = Number.isFinite(args.limit) ? args.limit - targetRows.length : 200;
     if (remaining <= 0) {
@@ -327,7 +399,14 @@ async function main() {
       break;
     }
 
-    targetRows = targetRows.concat(page);
+    scannedRows += page.length;
+    const eligibleRows = args.qualifiedOnly
+      ? page.filter(
+          (listing) => describeGeocodeQueryRequirements(listing).isReady,
+        )
+      : page;
+
+    targetRows = targetRows.concat(eligibleRows);
     offset += page.length;
 
     if (page.length < Math.min(200, remaining)) {
@@ -348,6 +427,9 @@ async function main() {
   console.log(
     `Processing ${targetRows.length} listings_normalized row(s) in batches of ${args.batchSize}.`,
   );
+  if (args.qualifiedOnly) {
+    console.log(`Scanned ${scannedRows} rows to find geocode-qualified listings.`);
+  }
   console.log(
     `Enrichment update columns available: ${Array.from(updateColumns).join(", ") || "none"}`,
   );
@@ -424,6 +506,10 @@ async function main() {
           external_id: listing.sourceListingId,
           issues: dedupeIssueEntries(issues),
         });
+      }
+
+      if (args.printResults) {
+        printEnrichmentResult(enrichment, dedupeIssueEntries(issues));
       }
 
       const updatePayload = filterRecordToAllowedColumns(
