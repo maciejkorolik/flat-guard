@@ -1,127 +1,182 @@
-import { SearchProfile } from "@/lib/types/flatguard";
-import { X } from "lucide-react";
+import type { DbSearchProfile } from "@/lib/types/flatguard";
 import { cn } from "@/lib/utils";
+import { CheckCircle2 } from "lucide-react";
 
 interface SearchProfilePanelProps {
-  profile: SearchProfile | null;
-  isReady?: boolean;
+  profile: DbSearchProfile | null;
 }
 
-export function SearchProfilePanel({ profile, isReady = false }: SearchProfilePanelProps) {
-  const isEmpty = !profile;
+export function SearchProfilePanel({ profile }: SearchProfilePanelProps) {
+  const city = profile?.preferred_cities?.[0] ?? null;
+  const budget = profile?.budget_target_pln ?? null;
+  const rooms = profile?.rooms_preferred ?? null;
+  const area = profile?.area_m2_preferred ?? null;
+  const districts = profile?.preferred_districts ?? [];
+  const features = profile?.preferred_features ?? [];
+  const dislikes = profile?.disliked_features ?? [];
+  const availability = profile?.availability_preferred ?? null;
+
+  const isReady = !!(city && budget && rooms);
+  const hasAnyData = !!(city || budget || rooms || area);
 
   return (
-    <div className="w-[450px] bg-white border-l border-[rgba(226,232,240,0.1)] h-full flex flex-col shrink-0">
+    <div className="w-[420px] bg-white border-l border-[rgba(226,232,240,0.15)] h-full flex flex-col shrink-0">
       {/* Panel header */}
-      <div className="backdrop-blur-sm bg-white/80 border-b border-[rgba(226,232,240,0.1)] px-6 py-5 flex items-center justify-between">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-[rgba(226,232,240,0.15)] px-6 py-5 flex items-center justify-between shrink-0">
         <div>
-          <h3 className="font-manrope font-extrabold text-[#0d1c2e] text-base tracking-tight">Search Profile</h3>
+          <h3 className="font-manrope font-extrabold text-[#0d1c2e] text-base tracking-tight">
+            Search Profile
+          </h3>
           <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest mt-0.5">
-            {isEmpty ? "Starting..." : `Version ${profile.version}`}
+            {!hasAnyData ? "Listening…" : isReady ? "Ready to search" : "Building…"}
           </p>
         </div>
-        <span className="bg-[#dce9ff] border border-[rgba(0,6,102,0.05)] text-[#000666] text-[10px] font-semibold rounded-full px-3 py-1">
-          Draft
+        <span
+          className={cn(
+            "text-[10px] font-semibold rounded-full px-3 py-1 transition-colors",
+            isReady
+              ? "bg-[#8df5e4] border border-[rgba(0,107,95,0.2)] text-[#007165]"
+              : "bg-[#dce9ff] border border-[rgba(0,6,102,0.05)] text-[#000666]"
+          )}
+        >
+          {isReady ? "Ready" : "Draft"}
         </span>
       </div>
 
-      {/* Profile content */}
-      <div className="flex-1 overflow-y-auto px-8 py-8 flex flex-col gap-8">
-        {/* Target City — always shown */}
-        <div className="relative">
-          <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-3">
-            Target City
-          </p>
-          <div className="bg-[#eff4ff] rounded-lg px-4 py-3 text-sm text-[#6b7280] flex items-center justify-between">
-            <span>{profile?.city || "Awaiting selection..."}</span>
-            {!profile?.city && (
-              <span className="bg-[#8df5e4] border border-[rgba(0,107,95,0.2)] text-[#007165] text-[9px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded">
-                Required
-              </span>
-            )}
-          </div>
+      {/* Profile fields — all always visible */}
+      <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5">
+        {/* Core fields — always shown */}
+        <ProfileField
+          label="Target City"
+          value={city}
+          highlight={!!city}
+          placeholder="Awaiting city…"
+        />
+
+        <ProfileField
+          label="Monthly Budget"
+          value={budget ? `${budget.toLocaleString("pl-PL")} PLN / mo` : null}
+          placeholder="Awaiting budget…"
+        />
+
+        <div className="grid grid-cols-2 gap-3">
+          <ProfileField
+            label="Rooms"
+            value={rooms ? `${rooms}+` : null}
+            placeholder="Awaiting…"
+          />
+          <ProfileField
+            label="Min Area"
+            value={area ? `${area} m²` : null}
+            placeholder="Awaiting…"
+          />
         </div>
 
-        {isEmpty ? (
-          <div className="flex flex-col items-center justify-center py-12 opacity-40">
-            <div className="text-4xl mb-4">📋</div>
-            <p className="text-[#0d1c2e] text-xs font-semibold text-center mb-1">Your Profile is Empty</p>
-            <p className="text-[#454652] text-[10px] text-center max-w-[200px] leading-relaxed">
-              As you chat with the Curator, your preferences will be automatically populated here.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6">
-            <div>
-              <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">
-                Monthly Budget
-              </p>
-              <div className="bg-[#eff4ff] rounded-lg px-4 py-3 text-sm font-semibold text-[#0d1c2e]">
-                €{profile.budgetMonthly.toLocaleString()}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Min Rooms</p>
-                <div className="bg-[#eff4ff] rounded-lg px-4 py-3 text-sm font-semibold text-[#0d1c2e]">{profile.minRooms}+</div>
-              </div>
-              <div>
-                <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Min Area</p>
-                <div className="bg-[#eff4ff] rounded-lg px-4 py-3 text-sm font-semibold text-[#0d1c2e]">{profile.minAreaM2} m²</div>
-              </div>
-            </div>
-            {profile.preferredDistricts.length > 0 && (
-              <div>
-                <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Preferred Districts</p>
-                <div className="flex flex-wrap gap-2">
-                  {profile.preferredDistricts.map((d) => (
-                    <span key={d} className="bg-[#eff4ff] text-[#000666] text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1">
-                      {d}
-                      <X size={10} />
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="flex items-center justify-between">
-              <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest">Pets Allowed</p>
-              <div className={cn(
-                "w-10 h-6 rounded-full flex items-center px-1 transition-colors",
-                profile.petsAllowed ? "bg-[#006b5f]" : "bg-gray-200"
-              )}>
-                <div className={cn(
-                  "w-4 h-4 bg-white rounded-full shadow transition-transform",
-                  profile.petsAllowed ? "translate-x-4" : "translate-x-0"
-                )} />
-              </div>
-            </div>
-            {profile.dealBreakers.length > 0 && (
-              <div>
-                <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest block mb-2">Deal-Breakers</p>
-                <div className="bg-red-50 rounded-lg p-3 flex flex-wrap gap-2">
-                  {profile.dealBreakers.map((d) => (
-                    <span key={d} className="text-red-700 text-xs font-medium">{d}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+        {/* Secondary fields — shown when filled */}
+        {districts.length > 0 && (
+          <TagField label="Preferred Districts" tags={districts} color="blue" />
+        )}
+        {features.length > 0 && (
+          <TagField label="Must Have" tags={features} color="green" />
+        )}
+        {dislikes.length > 0 && (
+          <TagField label="Deal-Breakers" tags={dislikes} color="red" />
+        )}
+        {availability && (
+          <ProfileField label="Move-in" value={availability} placeholder="" />
         )}
       </div>
 
       {/* CTA */}
-      <div className="border-t border-[rgba(226,232,240,0.2)] px-6 py-6">
+      <div className="border-t border-[rgba(226,232,240,0.2)] px-6 py-5 shrink-0">
+        {isReady && (
+          <div className="flex items-center gap-2 text-[#006b5f] text-xs font-medium mb-3">
+            <CheckCircle2 size={14} />
+            <span>Profile ready — you can run your first search</span>
+          </div>
+        )}
         <button
-          disabled={isEmpty || !isReady}
+          disabled={!isReady}
           className={cn(
-            "w-full flex items-center justify-center gap-3 py-4 rounded-xl text-sm font-extrabold font-manrope tracking-wide transition-colors",
-            isEmpty || !isReady
+            "w-full flex items-center justify-center gap-2.5 py-4 rounded-xl text-sm font-extrabold font-manrope tracking-wide transition-all",
+            !isReady
               ? "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
-              : "bg-gradient-to-r from-[#000666] to-[#1a237e] text-white hover:opacity-90"
+              : "bg-gradient-to-r from-[#000666] to-[#1a237e] text-white hover:opacity-90 shadow-lg shadow-[#000666]/20"
           )}
         >
-          <span aria-hidden="true">🚀</span> Run Search Profile
+          <span aria-hidden="true">🚀</span> Run Search
         </button>
+        {!isReady && (
+          <p className="text-center text-[#94a3b8] text-[10px] mt-2.5">
+            Keep chatting to unlock your search
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProfileField({
+  label,
+  value,
+  placeholder,
+  highlight = false,
+}: {
+  label: string;
+  value: string | null;
+  placeholder: string;
+  highlight?: boolean;
+}) {
+  const empty = !value;
+  return (
+    <div>
+      <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest mb-2">
+        {label}
+      </p>
+      <div
+        className={cn(
+          "rounded-lg px-4 py-3 text-sm transition-all duration-300",
+          empty
+            ? "bg-[#f8fafc] border border-dashed border-[rgba(198,197,212,0.5)] text-[#94a3b8]"
+            : highlight
+            ? "bg-[#000666] text-white font-semibold"
+            : "bg-[#eff4ff] text-[#0d1c2e] font-medium"
+        )}
+      >
+        {empty ? placeholder : value}
+      </div>
+    </div>
+  );
+}
+
+function TagField({
+  label,
+  tags,
+  color,
+}: {
+  label: string;
+  tags: string[];
+  color: "blue" | "green" | "red";
+}) {
+  const tagStyles = {
+    blue: "bg-[#eff4ff] text-[#000666]",
+    green: "bg-[#e6faf7] text-[#006b5f]",
+    red: "bg-red-50 text-red-700",
+  };
+  return (
+    <div>
+      <p className="text-[#454652] text-[10px] font-semibold uppercase tracking-widest mb-2">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {tags.map((tag) => (
+          <span
+            key={tag}
+            className={cn("text-xs font-medium px-3 py-1 rounded-full", tagStyles[color])}
+          >
+            {tag}
+          </span>
+        ))}
       </div>
     </div>
   );

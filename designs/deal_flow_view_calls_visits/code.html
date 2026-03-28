@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FlatGuard - Deal-flow Dashboard</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed-dim": "#bdc2ff",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#ccdbf3",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#00201c",
+                        "on-background": "#0d1c2e",
+                        "on-secondary-fixed-variant": "#005048",
+                        "primary": "#000666",
+                        "on-secondary-container": "#007165",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-high": "#dce9ff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-container": "#c98c00",
+                        "on-primary-container": "#8690ee",
+                        "surface": "#f8f9ff",
+                        "primary-container": "#1a237e",
+                        "secondary-container": "#8df5e4",
+                        "surface-bright": "#f8f9ff",
+                        "tertiary-fixed": "#ffdeac",
+                        "inverse-surface": "#233144",
+                        "surface-variant": "#d5e3fc",
+                        "on-surface-variant": "#454652",
+                        "surface-tint": "#4c56af",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#8df5e4",
+                        "primary-fixed": "#e0e0ff",
+                        "surface-container-low": "#eff4ff",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#767683",
+                        "on-primary-fixed-variant": "#343d96",
+                        "inverse-primary": "#bdc2ff",
+                        "on-error": "#ffffff",
+                        "on-surface": "#0d1c2e",
+                        "tertiary": "#271800",
+                        "on-tertiary-fixed-variant": "#604100",
+                        "tertiary-container": "#422c00",
+                        "on-primary-fixed": "#000767",
+                        "on-tertiary-fixed": "#281900",
+                        "background": "#f8f9ff",
+                        "secondary": "#006b5f",
+                        "outline-variant": "#c6c5d4",
+                        "secondary-fixed-dim": "#70d8c8",
+                        "surface-container-highest": "#d5e3fc",
+                        "surface-container": "#e6eeff",
+                        "tertiary-fixed-dim": "#ffba38",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary-fixed selection:text-primary">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r-0 bg-slate-50 dark:bg-slate-950 flex flex-col p-4 font-['Manrope'] font-medium text-sm">
+<div class="mb-8 px-2 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-lg">security</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-indigo-900 dark:text-indigo-100 leading-tight">FlatGuard</h1>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest">Active Project</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span>Interview</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span>Search</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="grade">grade</span>
+<span>Shortlist</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-800 rounded-lg shadow-sm scale-[0.98] duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="handshake">handshake</span>
+<span>Deal-flow</span>
+</a>
+</nav>
+<div class="mt-auto pt-4 border-t border-slate-200/50">
+<button class="w-full flex items-center justify-center gap-2 py-3 bg-primary text-on-primary rounded-lg font-bold shadow-md hover:bg-primary-container transition-all">
+<span class="material-symbols-outlined text-sm">add</span>
+<span>New Project</span>
+</button>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="ml-64 min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl flex items-center justify-between px-8 h-16 font-['Manrope'] text-sm tracking-tight border-b border-slate-200/20">
+<div class="flex items-center gap-8">
+<div class="flex items-center bg-surface-container-low px-4 py-1.5 rounded-full text-slate-400 focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-64 p-0" placeholder="Search within Project Alpha..." type="text"/>
+</div>
+<nav class="hidden md:flex gap-6">
+<a class="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" href="#">Project Alpha</a>
+<a class="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" href="#">Profile v2.1</a>
+<a class="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" href="#">Brussels Search</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden ml-2">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="minimalist 3d avatar of a professional young man with glasses and a blue shirt on a light background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsldHzzs57CUIGsy52WG5DOql-CpeO1oozSqnbAp79piryU2tQZLLEdEUQDwxGPEoTeJK8BRbHfuE-h1njBZhVC_Ljv-tooo1PzMjw0EKw-T23J3CCerLnko-LtgqE4TpItO8Gb5Exj8mX1Ajmlpe1uVfzzsFiI5OQpNZku-W0JhonPEBatf5ytWTJBs-osZD1lH4tVVzxgRl54WRYX7ArokJNFVtiowFHiZDLPWb3NQdbJ9xJDa-NLYFlCqIXDWLxnxKtovyBJZc"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="pt-24 px-8 pb-12">
+<!-- Breadcrumbs & Header -->
+<div class="mb-8 flex justify-between items-end">
+<div>
+<span class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Project Alpha / Brussels</span>
+<h2 class="text-3xl font-extrabold text-on-surface tracking-tight">Deal-flow Management</h2>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-5 py-2.5 bg-surface-container-lowest text-primary font-bold rounded-lg border border-primary/10 shadow-sm hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined text-lg">calendar_month</span>
+<span>Schedule Visit</span>
+</button>
+<button class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold rounded-lg shadow-lg hover:shadow-indigo-500/20 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-lg">call</span>
+<span>New AI Call</span>
+</button>
+</div>
+</div>
+<!-- Dashboard Layout (Editorial Grid) -->
+<div class="space-y-6">
+<!-- Horizontal Navigation Tabs -->
+<div class="flex gap-8 border-b border-outline-variant/15">
+<button class="pb-4 border-b-2 border-primary text-primary font-bold transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">call</span>
+                        Calls
+                    </button>
+<button class="pb-4 border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-xl">location_on</span>
+                        Visits
+                    </button>
+<button class="pb-4 border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-xl">insights</span>
+                        Deal Analysis
+                    </button>
+<button class="pb-4 border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-xl">star</span>
+                        Landlord Rating
+                    </button>
+</div>
+<!-- Main Content Row -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Calls Section (Active Tab Content) -->
+<div class="col-span-8 space-y-6">
+<!-- AI Insights Banner (Agentic Presence) -->
+<div class="p-5 rounded-xl bg-gradient-to-br from-surface-container-lowest to-secondary-container/10 border border-secondary/10 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-on-surface leading-tight">AI Agent Insight</h4>
+<p class="text-sm text-on-surface-variant">Three calls completed today. Pet policy verified for "Penthouse Ixelles". Landlord seems open to negotiation on the deposit.</p>
+</div>
+<button class="text-sm font-bold text-secondary hover:underline">View Analysis</button>
+</div>
+<!-- Calls Table (Bento Card style) -->
+<div class="bg-surface-container-lowest rounded-2xl p-2 shadow-sm border border-outline-variant/10 overflow-hidden">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">
+<tr>
+<th class="px-6 py-4">Listing &amp; Contact</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4">Goal</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden">
+<img alt="Apartment" class="w-full h-full object-cover" data-alt="stylish modern apartment interior with hardwood floors and large windows during morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTm3pHxcU6lNM0E4hNGzJDT2QyQ1kGZNm03rAYutUXu4J6ztCkoDokK3JcTpvuy8QKOHedyxTx9BKS4mi_FnJYlsvaqb6boO1UY2frJJRiJzMPeCVy2hRZiEUa0zSx1txc6k6zKhX1mkJWawUs22efKbvy9EPWVb1FQB4jFjFylFIVj8RJ-51GjwQ8FgKZkdNHKTApR1vcpab4ZSOmAZPVjCkdYumcQr9dm0aulv1Q1_twv5zUdgH_UFxFgbcnvx3cBzqqpQfHbNo"/>
+</div>
+<div>
+<div class="font-bold text-on-surface">Penthouse Ixelles</div>
+<div class="text-xs text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">person</span> Marc Dubois
+                                                    </div>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-bold uppercase tracking-tight flex items-center w-fit gap-1">
+<span class="material-symbols-outlined text-xs">check_circle</span> Completed
+                                            </span>
+</td>
+<td class="px-6 py-6">
+<div class="text-sm font-medium text-on-surface">Verify pet policy</div>
+<div class="mt-1 flex gap-2">
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-primary text-[10px] font-bold">PET: ALLOWED ✓</span>
+</div>
+</td>
+<td class="px-6 py-6 text-right">
+<button class="p-2 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">expand_circle_down</span></button>
+</td>
+</tr>
+<!-- Expanded View / Details Preview -->
+<tr class="bg-surface/50">
+<td class="px-6 py-6" colspan="4">
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-3">
+<h5 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">summarize</span> AI Summary
+                                                    </h5>
+<p class="text-sm leading-relaxed text-on-surface-variant italic">
+                                                        "Marc confirmed the building allows small pets under 10kg. He mentioned a 3-month bank guarantee is mandatory but the price is slightly negotiable if the lease starts before the 1st of next month."
+                                                    </p>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<h5 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">transcribe</span> Transcript Highlights
+                                                        </h5>
+<button class="text-[10px] font-bold text-primary hover:underline">View Raw Transcript</button>
+</div>
+<div class="space-y-2">
+<div class="flex gap-3 text-xs">
+<span class="font-bold text-secondary">AI Agent:</span>
+<span class="text-on-surface-variant">Could you clarify the policy regarding small dogs in the apartment?</span>
+</div>
+<div class="flex gap-3 text-xs">
+<span class="font-bold text-primary">Marc:</span>
+<span class="text-on-surface-variant">As long as it's well-behaved and doesn't bother neighbors, we have no issue...</span>
+</div>
+</div>
+</div>
+</div>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden">
+<img alt="Apartment" class="w-full h-full object-cover" data-alt="elegant historical building facade with ornate balconies in a european city street" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC14P25Sa9-mHVPaxBHj2_dhdI8Re3jfeAVL75nhI3Fss36MP7hvMkM29n5Clt6du0eEbtfNkLb-6kAyKEEMo4cyJ_Se8HzBpeUyH40S6_sNNmIUeyDW2JlEErFaH4YH98bIPe7WdwItLdIjXVIfFXTMd9JoH15Uq2VhAMLpypyzQEuvoVmGDcjvJTmJZ_LGX7ijTqw_mH1HOTGeQ93lEMyauWviHaMvbpXl4ErYYI7uo6FWJyFnp7mk-qPL1Sso2i8MGL6K8UnHGk"/>
+</div>
+<div>
+<div class="font-bold text-on-surface">Loft Grand Place</div>
+<div class="text-xs text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">person</span> Sarah Janssens
+                                                    </div>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="px-3 py-1 rounded-full bg-surface-container-highest text-on-surface-variant text-[11px] font-bold uppercase tracking-tight flex items-center w-fit gap-1">
+<span class="material-symbols-outlined text-xs animate-pulse">hourglass_top</span> Queued
+                                            </span>
+</td>
+<td class="px-6 py-6">
+<div class="text-sm font-medium text-on-surface">Confirm viewing time</div>
+</td>
+<td class="px-6 py-6 text-right">
+<button class="p-2 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">more_horiz</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Side Panel: Visits & Forms (Secondary Layers) -->
+<div class="col-span-4 space-y-6">
+<!-- Visits Preview Card -->
+<section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-bold text-on-surface tracking-tight">Upcoming Visits</h3>
+<button class="text-xs font-bold text-primary">View All</button>
+</div>
+<div class="space-y-4">
+<!-- Visit Item -->
+<div class="p-4 rounded-xl bg-surface-container-low border-l-4 border-primary">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Tomorrow at 14:00</span>
+<span class="px-2 py-0.5 rounded bg-white text-[10px] font-bold text-primary shadow-sm border border-primary/10">Planned</span>
+</div>
+<h4 class="font-bold text-sm text-on-surface">Penthouse Ixelles</h4>
+<div class="mt-4 space-y-2">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase">Checklist Highlights:</p>
+<label class="flex items-center gap-2 text-xs text-on-surface-variant">
+<input checked="" class="rounded text-primary focus:ring-primary/20 w-3.5 h-3.5" type="checkbox"/> Check water pressure
+                                        </label>
+<label class="flex items-center gap-2 text-xs text-on-surface-variant">
+<input class="rounded text-primary focus:ring-primary/20 w-3.5 h-3.5" type="checkbox"/> Test mobile signal
+                                        </label>
+<label class="flex items-center gap-2 text-xs text-on-surface-variant">
+<input class="rounded text-primary focus:ring-primary/20 w-3.5 h-3.5" type="checkbox"/> Verify cellar access
+                                        </label>
+</div>
+</div>
+</div>
+</section>
+<!-- Post-visit Report Preview Form -->
+<section class="bg-gradient-to-br from-indigo-900 to-primary-container rounded-2xl p-6 shadow-xl text-on-primary">
+<h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined">description</span>
+                                Visit Report
+                            </h3>
+<div class="space-y-4">
+<div>
+<label class="text-[10px] font-bold uppercase opacity-70 block mb-1">Quick Rating</label>
+<div class="flex gap-2">
+<button class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all">1</button>
+<button class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all">2</button>
+<button class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all">3</button>
+<button class="w-10 h-10 rounded-lg bg-secondary-container text-primary flex items-center justify-center shadow-lg font-bold">4</button>
+<button class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all">5</button>
+</div>
+</div>
+<div>
+<label class="text-[10px] font-bold uppercase opacity-70 block mb-1">Observation Notes</label>
+<textarea class="w-full bg-white/5 border border-white/10 rounded-lg text-xs placeholder:text-white/30 focus:ring-secondary/50 focus:border-secondary h-20 resize-none" placeholder="e.g. Living room gets amazing afternoon light..."></textarea>
+</div>
+<button class="w-full py-3 bg-secondary-container text-on-secondary-container font-extrabold rounded-lg shadow-lg hover:scale-[1.02] transition-transform">
+                                    Submit Final Analysis
+                                </button>
+</div>
+</section>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating AI Bubble (Agentic Visual) -->
+<div class="fixed bottom-8 right-8 z-50">
+<button class="group relative w-16 h-16 rounded-full bg-white shadow-2xl flex items-center justify-center border border-indigo-100/50">
+<div class="absolute inset-0 rounded-full bg-gradient-to-tr from-secondary/20 to-primary/10 animate-pulse"></div>
+<span class="material-symbols-outlined text-3xl text-primary group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<div class="absolute -top-12 right-0 bg-white px-3 py-1.5 rounded-lg shadow-lg text-xs font-bold text-primary whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                "Ready to dial landlord?"
+            </div>
+</button>
+</div>
+</body></html>

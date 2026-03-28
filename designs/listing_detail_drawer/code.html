@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FlatGuard | Listing Details</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary-fixed-dim": "#bdc2ff",
+              "on-primary": "#ffffff",
+              "error-container": "#ffdad6",
+              "surface-dim": "#ccdbf3",
+              "on-error-container": "#93000a",
+              "on-secondary-fixed": "#00201c",
+              "on-background": "#0d1c2e",
+              "on-secondary-fixed-variant": "#005048",
+              "primary": "#000666",
+              "on-secondary-container": "#007165",
+              "inverse-on-surface": "#eaf1ff",
+              "surface-container-high": "#dce9ff",
+              "error": "#ba1a1a",
+              "on-tertiary-container": "#c98c00",
+              "on-primary-container": "#8690ee",
+              "surface": "#f8f9ff",
+              "primary-container": "#1a237e",
+              "secondary-container": "#8df5e4",
+              "surface-bright": "#f8f9ff",
+              "tertiary-fixed": "#ffdeac",
+              "inverse-surface": "#233144",
+              "surface-variant": "#d5e3fc",
+              "on-surface-variant": "#454652",
+              "surface-tint": "#4c56af",
+              "on-secondary": "#ffffff",
+              "secondary-fixed": "#8df5e4",
+              "primary-fixed": "#e0e0ff",
+              "surface-container-low": "#eff4ff",
+              "on-tertiary": "#ffffff",
+              "outline": "#767683",
+              "on-primary-fixed-variant": "#343d96",
+              "inverse-primary": "#bdc2ff",
+              "on-error": "#ffffff",
+              "on-surface": "#0d1c2e",
+              "tertiary": "#271800",
+              "on-tertiary-fixed-variant": "#604100",
+              "tertiary-container": "#422c00",
+              "on-primary-fixed": "#000767",
+              "on-tertiary-fixed": "#281900",
+              "background": "#f8f9ff",
+              "secondary": "#006b5f",
+              "outline-variant": "#c6c5d4",
+              "secondary-fixed-dim": "#70d8c8",
+              "surface-container-highest": "#d5e3fc",
+              "surface-container": "#e6eeff",
+              "tertiary-fixed-dim": "#ffba38",
+              "surface-container-lowest": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .spider-chart-bg {
+            background: radial-gradient(circle at center, transparent 30%, rgba(0, 107, 95, 0.05) 31%, transparent 32%, transparent 60%, rgba(0, 107, 95, 0.05) 61%, transparent 62%);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d5e3fc; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased overflow-hidden h-screen flex">
+<!-- SideNavBar (Shared Component) -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r-0 bg-slate-50 dark:bg-slate-950 flex flex-col p-4 z-50">
+<div class="mb-8 px-2">
+<h1 class="text-xl font-bold text-indigo-900 dark:text-indigo-100 font-headline">FlatGuard</h1>
+<p class="text-xs text-slate-500 font-medium">Active Project</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 font-['Manrope'] font-medium text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" href="#">
+<span class="material-symbols-outlined">chat_bubble</span> Interview
+            </a>
+<!-- Active Tab: Search -->
+<a class="flex items-center gap-3 px-4 py-3 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-800 rounded-lg shadow-sm font-['Manrope'] font-medium text-sm scale-[0.98] duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">search</span> Search
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 font-['Manrope'] font-medium text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" href="#">
+<span class="material-symbols-outlined">grade</span> Shortlist
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 font-['Manrope'] font-medium text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" href="#">
+<span class="material-symbols-outlined">handshake</span> Deal-flow
+            </a>
+</nav>
+<button class="mt-auto bg-primary text-on-primary w-full py-3 rounded-lg font-headline font-bold text-sm tracking-tight hover:opacity-90 transition-opacity">
+            New Project
+        </button>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 flex flex-col h-screen relative">
+<!-- TopAppBar (Shared Component) -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 flex items-center justify-between px-8 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/20 font-['Manrope'] text-sm tracking-tight">
+<div class="flex items-center gap-8">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-lowest rounded-full border-none text-sm w-64 focus:ring-2 focus:ring-primary/10" placeholder="Brussels Search" type="text"/>
+</div>
+<div class="flex gap-6">
+<a class="text-slate-400 hover:text-indigo-600 transition-colors" href="#">Project Alpha</a>
+<a class="text-indigo-900 font-semibold" href="#">Profile v2.1</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<button class="p-2 text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined">settings</span></button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="close-up portrait of a professional male user with friendly expression in bright office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwb03ND8_kkhsnVDSLM1ENM4k-e7Lx0isLonRVS5OOam2mqEQI4yJREUKrF7Zd_JyMgFiJAkwu7I6LI3P45BFR7DcE5XkxrjWPSy5j7FHqkTF-Ro6NN04-tl03K1O7jrxNhJ7YNuOK2jEnj_dDGcxxv8ccAy7d1RTfJdWAzTtgZfReC7vvo88Hz1vqJhXFg64IDjEUr-bVBJQErAC86Aokg0QGlnSe1U2x1ghKghYUJSO-IW6NGe1y1ZpK79CmFGbSDokFNBFmLZY"/>
+</div>
+</div>
+</header>
+<!-- Background Content (Simulating Search Results) -->
+<div class="pt-20 px-8 flex-1 bg-surface-container-low overflow-y-auto">
+<div class="max-w-5xl mx-auto space-y-6 opacity-40 grayscale-[0.5] pointer-events-none">
+<div class="h-48 bg-surface-container-lowest rounded-xl"></div>
+<div class="h-48 bg-surface-container-lowest rounded-xl"></div>
+</div>
+</div>
+<!-- Overlay / Detail Drawer -->
+<div class="absolute inset-y-0 right-0 w-[580px] bg-surface-container-lowest shadow-2xl z-50 flex flex-col transform transition-transform duration-300">
+<!-- Header Actions -->
+<div class="absolute top-4 right-4 z-10 flex gap-2">
+<button class="p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-on-surface">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto pb-24">
+<!-- Top: Photo Carousel & Core Info -->
+<section class="relative group">
+<div class="h-[320px] w-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="ultra-modern luxury apartment interior with floor to ceiling windows overlooking a city skyline at sunset" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWN-IOGeYzAi22z6TGlzB709Xb8fNKVqlmy1HKL-bq5hra02EbYD7tdirraLwSOlWmJNxUPlVm63FxeaPxY8cePaa1LbFEXDS01UEsEt6xJpT2TkdbuWapZZe0ExL3mBiXqzfSVxOUB518fdaluP8O0j-H31cSUqvoDaSh5oczXd6N3VLlHiXG8Ugb4YXe717MEp-d92Wkn1_N9DOhMC6k8fLKuJKpDcXT7ZAY-qK5S-1RMxVJD9gck-o2-xuWvjWtzla_IX2_kqk"/>
+</div>
+<div class="p-8 space-y-4">
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<span class="text-secondary font-bold text-xs tracking-widest font-headline">IXELLES, BRUSSELS</span>
+<h2 class="text-3xl font-bold font-headline leading-tight">Modern Loft near Place Flagey</h2>
+<p class="text-on-surface-variant text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span>
+                                    Rue de la Brasserie 42, 1050 Brussels
+                                </p>
+</div>
+<div class="bg-secondary-container px-3 py-1 rounded-full flex items-center gap-1 border border-secondary/20">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-on-secondary-container text-xs font-bold font-headline">AI MATCH 94%</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Data Quality Bar -->
+<section class="px-8 mb-8">
+<div class="bg-surface-container-low rounded-xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-6">
+<div class="text-center">
+<p class="text-[10px] uppercase font-bold text-outline-variant mb-1">Completeness</p>
+<p class="text-sm font-bold text-on-surface">98%</p>
+</div>
+<div class="w-px h-8 bg-outline-variant/20"></div>
+<div class="text-center">
+<p class="text-[10px] uppercase font-bold text-outline-variant mb-1">Confidence</p>
+<div class="flex items-center gap-1">
+<p class="text-sm font-bold text-on-surface">High</p>
+</div>
+</div>
+<div class="w-px h-8 bg-outline-variant/20"></div>
+<div class="text-center">
+<p class="text-[10px] uppercase font-bold text-outline-variant mb-1">Freshness</p>
+<p class="text-sm font-bold text-on-surface">2h ago</p>
+</div>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-lowest rounded-lg border border-outline-variant/10">
+<span class="material-symbols-outlined text-secondary text-sm">verified</span>
+<span class="text-[11px] font-bold text-secondary">SOURCE VERIFIED</span>
+</div>
+</div>
+</section>
+<!-- Specs Grid -->
+<section class="px-8 grid grid-cols-4 gap-4 mb-10">
+<div class="p-4 rounded-xl bg-surface-container-low border border-transparent hover:border-surface-tint/20 transition-all group">
+<span class="material-symbols-outlined text-surface-tint mb-2">square_foot</span>
+<p class="text-xs text-on-surface-variant font-medium">Area</p>
+<p class="text-lg font-bold font-headline">85 m²</p>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-transparent hover:border-surface-tint/20 transition-all group">
+<span class="material-symbols-outlined text-surface-tint mb-2">bed</span>
+<p class="text-xs text-on-surface-variant font-medium">Rooms</p>
+<p class="text-lg font-bold font-headline">2 Bed</p>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-transparent hover:border-surface-tint/20 transition-all group">
+<span class="material-symbols-outlined text-surface-tint mb-2">apartment</span>
+<p class="text-xs text-on-surface-variant font-medium">Floor</p>
+<p class="text-lg font-bold font-headline">3rd</p>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-transparent hover:border-surface-tint/20 transition-all group">
+<span class="material-symbols-outlined text-surface-tint mb-2">home_work</span>
+<p class="text-xs text-on-surface-variant font-medium">Type</p>
+<p class="text-lg font-bold font-headline">Loft</p>
+</div>
+</section>
+<!-- Rent Breakdown -->
+<section class="px-8 mb-10">
+<div class="bg-primary text-on-primary rounded-2xl p-6 shadow-xl shadow-primary/10 overflow-hidden relative">
+<div class="absolute top-0 right-0 p-8 opacity-10">
+<span class="material-symbols-outlined text-8xl" style="font-variation-settings: 'wght' 700;">payments</span>
+</div>
+<h3 class="text-sm font-bold uppercase tracking-widest opacity-70 mb-6">Financial Summary</h3>
+<div class="space-y-3 relative z-10">
+<div class="flex justify-between items-center text-sm">
+<span class="opacity-80">Base Rent</span>
+<span class="font-medium">€1,450.00</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="opacity-80">Service Fees &amp; Utilities</span>
+<span class="font-medium">€180.00</span>
+</div>
+<div class="flex justify-between items-center text-sm pb-3 border-b border-on-primary/10">
+<span class="opacity-80">Deposit (2 Months)</span>
+<span class="font-medium">€2,900.00</span>
+</div>
+<div class="flex justify-between items-end pt-2">
+<div>
+<p class="text-[10px] uppercase font-bold opacity-60">Monthly Total</p>
+<p class="text-3xl font-extrabold font-headline">€1,630</p>
+</div>
+<span class="text-[10px] bg-white/20 px-2 py-1 rounded font-bold">ALL-IN</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Score Section -->
+<section class="px-8 mb-10">
+<div class="flex items-center gap-3 mb-6">
+<div class="h-8 w-1 bg-secondary rounded-full"></div>
+<h3 class="text-xl font-bold font-headline">Guard Intelligence Score</h3>
+</div>
+<div class="grid grid-cols-2 gap-8 items-center">
+<div class="aspect-square relative spider-chart-bg rounded-full flex items-center justify-center">
+<!-- Visual placeholder for Radar Chart -->
+<div class="absolute inset-4 border border-secondary/10 rounded-full"></div>
+<div class="absolute inset-12 border border-secondary/10 rounded-full"></div>
+<div class="relative text-center">
+<p class="text-5xl font-extrabold font-headline text-on-surface">8.8</p>
+<p class="text-[10px] font-bold text-secondary tracking-widest uppercase">Excellent</p>
+</div>
+<!-- Radial Tags -->
+<span class="absolute top-0 text-[10px] font-bold text-outline-variant">PRICE</span>
+<span class="absolute right-0 text-[10px] font-bold text-outline-variant">SAFETY</span>
+<span class="absolute bottom-0 text-[10px] font-bold text-outline-variant">DATA</span>
+<span class="absolute left-0 text-[10px] font-bold text-outline-variant">FIT</span>
+</div>
+<div class="space-y-4">
+<div class="space-y-1">
+<div class="flex justify-between text-xs font-bold mb-1">
+<span class="text-on-surface-variant">Completeness</span>
+<span>9.5</span>
+</div>
+<div class="h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[95%]"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-xs font-bold mb-1">
+<span class="text-on-surface-variant">Quality</span>
+<span>8.2</span>
+</div>
+<div class="h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[82%]"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-xs font-bold mb-1">
+<span class="text-on-surface-variant">Safety</span>
+<span>9.0</span>
+</div>
+<div class="h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[90%]"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-xs font-bold mb-1">
+<span class="text-on-surface-variant">Price Fit</span>
+<span>7.5</span>
+</div>
+<div class="h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-fixed-dim w-[75%]"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Reasons List -->
+<section class="px-8 mb-10 space-y-4">
+<div class="p-4 rounded-xl bg-secondary-container/20 border border-secondary/10 flex gap-4">
+<span class="material-symbols-outlined text-secondary">thumb_up</span>
+<div>
+<p class="text-sm font-bold text-secondary mb-1">Positive Intelligence</p>
+<p class="text-xs text-on-surface-variant leading-relaxed">High historical safety rating for this block. Landlord has verified identity via LinkedIn and national ID.</p>
+</div>
+</div>
+<div class="p-4 rounded-xl bg-error-container/20 border border-error/10 flex gap-4">
+<span class="material-symbols-outlined text-error">info</span>
+<div>
+<p class="text-sm font-bold text-error mb-1">Price Discrepancy</p>
+<p class="text-xs text-on-surface-variant leading-relaxed">Rent is 12% higher than comparable lofts in Ixelles. Potential for negotiation during Deal-flow.</p>
+</div>
+</div>
+</section>
+<!-- Contact Block -->
+<section class="px-8 mb-8">
+<div class="bg-surface-container-low p-6 rounded-2xl border border-outline-variant/10">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center font-bold text-primary border border-outline-variant/20 shadow-sm">
+                                JD
+                            </div>
+<div>
+<p class="font-bold font-headline">Jean Dupont</p>
+<p class="text-xs text-on-surface-variant">Verified Landlord • 4.9★ Rating</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm">
+<span class="material-symbols-outlined text-primary text-lg">phone</span>
+<span class="text-xs font-medium">+32 478 22 •••</span>
+</div>
+<div class="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm">
+<span class="material-symbols-outlined text-primary text-lg">mail</span>
+<span class="text-xs font-medium">j.dupont@•••.com</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Persistent Bottom Action Bar -->
+<div class="absolute bottom-0 inset-x-0 p-6 bg-white/80 backdrop-blur-xl border-t border-outline-variant/10 flex items-center gap-3">
+<button class="flex-1 bg-primary text-on-primary py-4 rounded-xl font-bold font-headline flex items-center justify-center gap-3 hover:shadow-lg hover:shadow-primary/20 transition-all group">
+<span class="material-symbols-outlined group-hover:rotate-12 transition-transform">call</span>
+                    Call landlord via AI
+                </button>
+<button class="w-14 h-14 bg-surface-container-high text-on-surface rounded-xl flex items-center justify-center hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined">bookmark_add</span>
+</button>
+</div>
+<!-- Agentic Nudge Overlay -->
+<div class="absolute bottom-[88px] right-6 left-6">
+<div class="bg-inverse-surface text-inverse-on-surface p-3 rounded-lg shadow-lg flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+<p class="text-[10px] font-bold tracking-tight uppercase">Agent Suggestion</p>
+</div>
+<p class="text-[10px] opacity-80">Full negotiation &amp; lease tools available in <b>Deal-flow</b></p>
+</div>
+</div>
+</div>
+</main>
+</body></html>

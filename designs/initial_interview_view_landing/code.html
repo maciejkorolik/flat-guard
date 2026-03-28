@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+        }
+        .ai-glow {
+            box-shadow: inset 0 0 12px rgba(0, 107, 95, 0.1);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary-fixed-dim": "#bdc2ff",
+                "on-primary": "#ffffff",
+                "error-container": "#ffdad6",
+                "surface-dim": "#ccdbf3",
+                "on-error-container": "#93000a",
+                "on-secondary-fixed": "#00201c",
+                "on-background": "#0d1c2e",
+                "on-secondary-fixed-variant": "#005048",
+                "primary": "#000666",
+                "on-secondary-container": "#007165",
+                "inverse-on-surface": "#eaf1ff",
+                "surface-container-high": "#dce9ff",
+                "error": "#ba1a1a",
+                "on-tertiary-container": "#c98c00",
+                "on-primary-container": "#8690ee",
+                "surface": "#f8f9ff",
+                "primary-container": "#1a237e",
+                "secondary-container": "#8df5e4",
+                "surface-bright": "#f8f9ff",
+                "tertiary-fixed": "#ffdeac",
+                "inverse-surface": "#233144",
+                "surface-variant": "#d5e3fc",
+                "on-surface-variant": "#454652",
+                "surface-tint": "#4c56af",
+                "on-secondary": "#ffffff",
+                "secondary-fixed": "#8df5e4",
+                "primary-fixed": "#e0e0ff",
+                "surface-container-low": "#eff4ff",
+                "on-tertiary": "#ffffff",
+                "outline": "#767683",
+                "on-primary-fixed-variant": "#343d96",
+                "inverse-primary": "#bdc2ff",
+                "on-error": "#ffffff",
+                "on-surface": "#0d1c2e",
+                "tertiary": "#271800",
+                "on-tertiary-fixed-variant": "#604100",
+                "tertiary-container": "#422c00",
+                "on-primary-fixed": "#000767",
+                "on-tertiary-fixed": "#281900",
+                "background": "#f8f9ff",
+                "secondary": "#006b5f",
+                "outline-variant": "#c6c5d4",
+                "secondary-fixed-dim": "#70d8c8",
+                "surface-container-highest": "#d5e3fc",
+                "surface-container": "#e6eeff",
+                "tertiary-fixed-dim": "#ffba38",
+                "surface-container-lowest": "#ffffff"
+              },
+              fontFamily: {
+                "headline": ["Manrope"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r-0 bg-slate-50 flex flex-col p-4 z-50">
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-lg">shield</span>
+</div>
+<div>
+<div class="text-xl font-bold text-indigo-900 leading-tight">FlatGuard</div>
+</div>
+</div>
+<nav class="flex flex-col gap-1 flex-1">
+<!-- Active: Interview -->
+<a class="flex items-center gap-3 px-4 py-3 text-emerald-700 bg-white rounded-lg shadow-sm font-['Manrope'] font-medium text-sm transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+            Interview
+        </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-indigo-50 transition-colors font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+            Search
+        </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-indigo-50 transition-colors font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="grade">grade</span>
+            Shortlist
+        </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-indigo-50 transition-colors font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="handshake">handshake</span>
+            Deal-flow
+        </a>
+</nav>
+<div class="mt-auto flex flex-col gap-2">
+<button class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-indigo-50 transition-colors font-['Manrope'] font-medium text-sm rounded-lg" href="#">
+<span class="material-symbols-outlined text-xl">history</span>
+            Project History
+        </button>
+<button class="bg-primary text-white py-3 rounded-lg font-headline font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/20">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+            New Project
+        </button>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-white/70 backdrop-blur-xl border-b border-slate-200/20 h-16 flex items-center justify-between px-8">
+<div class="flex items-center gap-6">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-primary/20" placeholder="Search cities..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-primary-container">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="professional portrait of a young woman with a friendly expression in a modern office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8rp3gJWTATFypuceymVOL2EBAVVgP_2UnHmIVGUYW3Co5vlGX4o1XkEhoiFZThWugxe8FhIvVTtfn0ZOWD24ijiSFyWTsk6SwbNzilfw49YiTys0y6vmP1yAFyxlhu_7_8qsC5CGi7s6XO-sVhBFxYp0XZiSSOM1AzDYydIdD4TT9bLn00vicsMC8_lRtvRm_ITvMuB1blYzShyRZkpyzrnLY84G2W4TxGkOpaqR6I2TmA1585DqRmj29tRvymSVm-dejQDKKwVo"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 h-screen flex overflow-hidden">
+<!-- Left Panel: Chat Interface -->
+<section class="flex-1 flex flex-col bg-surface-container-low border-r border-slate-200/10">
+<div class="p-6 border-b border-slate-200/20 bg-white/50">
+<h2 class="font-headline text-lg font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                Interview with FlatGuard AI
+            </h2>
+<p class="text-xs text-on-surface-variant font-medium">Helping you refine your architectural living preferences</p>
+</div>
+<div class="flex-1 overflow-y-auto p-8 space-y-6">
+<!-- AI Welcoming Message -->
+<div class="flex gap-4 max-w-[85%]">
+<div class="w-8 h-8 rounded-lg bg-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-secondary-container text-sm" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-on-surface">FlatGuard Curator</span>
+<span class="text-[10px] text-on-surface-variant">Just now</span>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl rounded-tl-none shadow-sm border border-secondary/5 text-sm leading-relaxed text-on-surface">
+                        Hi! I'm FlatGuard Curator. Let's find your perfect home. Which city are we looking in today?
+                    </div>
+</div>
+</div>
+</div>
+<!-- Chat Input -->
+<div class="p-6 bg-white/50">
+<div class="relative flex items-center">
+<input class="w-full bg-surface-container-lowest border-none rounded-xl py-4 pl-6 pr-14 shadow-sm focus:ring-2 focus:ring-primary/10 text-sm" placeholder="Type your response..." type="text"/>
+<button class="absolute right-3 p-2 bg-primary text-white rounded-lg hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Right Panel: Live Search Profile Form (Initial State) -->
+<section class="w-[450px] bg-surface-container-lowest overflow-y-auto flex flex-col border-l border-slate-200/10">
+<div class="p-6 border-b border-slate-200/10 sticky top-0 bg-white/80 backdrop-blur-md z-10 flex justify-between items-center">
+<div>
+<h3 class="font-headline font-extrabold text-on-surface tracking-tight">Search Profile</h3>
+<p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Starting...</p>
+</div>
+<div class="px-3 py-1 bg-surface-container-high rounded-full text-[10px] font-bold text-primary border border-primary/5">
+                Draft
+            </div>
+</div>
+<div class="p-8 space-y-8 pb-32">
+<!-- Location (First Requirement) -->
+<div class="space-y-2">
+<label class="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest px-1">Target City</label>
+<div class="relative group">
+<input class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-surface-tint italic text-on-surface-variant" disabled="" placeholder="Awaiting selection..." type="text"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-secondary-container text-[9px] font-bold text-on-secondary-container rounded border border-secondary/20 uppercase tracking-tighter">Required</span>
+</div>
+</div>
+<!-- Empty State Illustration/Hint -->
+<div class="flex flex-col items-center justify-center py-12 text-center space-y-4 opacity-40">
+<span class="material-symbols-outlined text-5xl text-slate-300">fact_check</span>
+<div>
+<p class="text-xs font-bold text-on-surface">Your Profile is Empty</p>
+<p class="text-[10px] text-on-surface-variant px-12">As you chat with the Curator, your preferences will be automatically populated here.</p>
+</div>
+</div>
+</div>
+<!-- Sticky CTA (Disabled) -->
+<div class="mt-auto p-6 bg-white border-t border-slate-200/20 sticky bottom-0">
+<button class="w-full bg-slate-200 text-slate-400 py-4 rounded-xl font-headline font-extrabold text-sm tracking-wide flex items-center justify-center gap-3 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-lg">rocket_launch</span>
+                Run Search Profile
+            </button>
+</div>
+</section>
+</main>
+</body></html>

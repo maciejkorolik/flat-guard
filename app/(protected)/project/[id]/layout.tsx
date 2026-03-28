@@ -1,5 +1,6 @@
+import { Suspense } from "react";
+import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { getProject } from "@/lib/mock/projects";
 import { AppShell } from "@/components/layout/app-shell";
 
 interface ProjectLayoutProps {
@@ -7,22 +8,44 @@ interface ProjectLayoutProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function ProjectLayout({ children, params }: ProjectLayoutProps) {
+async function ProjectLayoutInner({ children, params }: ProjectLayoutProps) {
   const { id } = await params;
-  const project = getProject(id);
+  const supabase = await createClient();
+
+  const { data: project } = await supabase
+    .from("projects")
+    .select("id, name, status")
+    .eq("id", id)
+    .single();
 
   if (!project) notFound();
 
   return (
     <AppShell
       projectId={id}
-      activeProject={project.city}
+      activeProject={project.name}
       breadcrumbs={[
         { label: project.name },
-        { label: `Profile v3`, active: true },
+        { label: "Interview", active: true },
       ]}
     >
       {children}
     </AppShell>
+  );
+}
+
+function ProjectLayoutFallback() {
+  return (
+    <div className="min-h-screen bg-[#f8f9ff] flex items-center justify-center text-[#454652] text-sm">
+      Loading project…
+    </div>
+  );
+}
+
+export default function ProjectLayout({ children, params }: ProjectLayoutProps) {
+  return (
+    <Suspense fallback={<ProjectLayoutFallback />}>
+      <ProjectLayoutInner params={params}>{children}</ProjectLayoutInner>
+    </Suspense>
   );
 }
