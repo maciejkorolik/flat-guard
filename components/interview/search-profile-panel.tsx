@@ -1,12 +1,14 @@
 import type { DbSearchProfile } from "@/lib/types/flatguard";
 import { cn } from "@/lib/utils";
 import { CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 
 interface SearchProfilePanelProps {
   profile: DbSearchProfile | null;
+  projectId: string;
 }
 
-export function SearchProfilePanel({ profile }: SearchProfilePanelProps) {
+export function SearchProfilePanel({ profile, projectId }: SearchProfilePanelProps) {
   const city = profile?.preferred_cities?.[0] ?? null;
   const budget = profile?.budget_target_pln ?? null;
   const rooms = profile?.rooms_preferred ?? null;
@@ -95,17 +97,21 @@ export function SearchProfilePanel({ profile }: SearchProfilePanelProps) {
             <span>Profile ready — you can run your first search</span>
           </div>
         )}
-        <button
-          disabled={!isReady}
-          className={cn(
-            "w-full flex items-center justify-center gap-2.5 py-4 rounded-xl text-sm font-extrabold font-manrope tracking-wide transition-all",
-            !isReady
-              ? "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
-              : "bg-gradient-to-r from-[#000666] to-[#1a237e] text-white hover:opacity-90 shadow-lg shadow-[#000666]/20"
-          )}
-        >
-          <span aria-hidden="true">🚀</span> Run Search
-        </button>
+        {isReady ? (
+          <Link
+            href={`/project/${projectId}/search?autorun=1`}
+            className="w-full flex items-center justify-center gap-2.5 py-4 rounded-xl text-sm font-extrabold font-manrope tracking-wide bg-gradient-to-r from-[#000666] to-[#1a237e] text-white hover:opacity-90 shadow-lg shadow-[#000666]/20 transition-opacity"
+          >
+            <span aria-hidden="true">🚀</span> Run Search
+          </Link>
+        ) : (
+          <button
+            disabled
+            className="w-full flex items-center justify-center gap-2.5 py-4 rounded-xl text-sm font-extrabold font-manrope tracking-wide bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
+          >
+            <span aria-hidden="true">🚀</span> Run Search
+          </button>
+        )}
         {!isReady && (
           <p className="text-center text-[#94a3b8] text-[10px] mt-2.5">
             Keep chatting to unlock your search

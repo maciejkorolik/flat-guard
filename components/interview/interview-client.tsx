@@ -213,7 +213,7 @@ export function InterviewClient({ projectId, initialProfile }: InterviewClientPr
       </div>
 
       {/* ── Right: Search Profile Panel ── */}
-      <SearchProfilePanel profile={searchProfile} />
+      <SearchProfilePanel profile={searchProfile} projectId={projectId} />
     </div>
   );
 }

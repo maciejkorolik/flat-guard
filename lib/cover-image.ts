@@ -3,16 +3,19 @@ import { openai } from "@ai-sdk/openai";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Generates a small DALL-E 2 cover image for a city and stores it as a
- * base64 data URL in projects.cover_image. Safe to fire-and-forget via after().
+ * Project cover via OpenAI GPT Image 1.5 (recommended over DALL·E 2/3 for quality).
+ * Stored as a base64 data URL in projects.cover_image. Safe to fire-and-forget via after().
+ *
+ * @see https://platform.openai.com/docs/guides/image-generation
  */
 export async function generateProjectCover(
   projectId: string,
   city: string
 ): Promise<void> {
+  if (!process.env.OPENAI_API_KEY) return;
+
   const supabase = await createClient();
 
-  // Skip if the project already has a cover
   const { data: project } = await supabase
     .from("projects")
     .select("cover_image")
@@ -22,10 +25,15 @@ export async function generateProjectCover(
   if (project?.cover_image) return;
 
   const { images } = await generateImage({
-    model: openai.image("dall-e-2"),
+    model: openai.image("gpt-image-1.5"),
     prompt: `Aerial cityscape of ${city}, European architecture, golden hour warm light, clean minimal travel photography style`,
-    size: "256x256",
+    size: "1024x1024",
     n: 1,
+    providerOptions: {
+      openai: {
+        quality: "medium",
+      },
+    },
   });
 
   const base64 = images[0]?.base64;
