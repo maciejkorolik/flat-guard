@@ -6,6 +6,8 @@ import { resolveRequestedCategories } from "../lib/enrichment/category-config.mj
 import { getSupabaseAdminKeyFromEnv } from "../lib/enrichment/io.mjs";
 import {
   buildGeocodeInput,
+  describeGeocodeQueryRequirements,
+  ENRICHMENT_QUERY_COMPONENTS,
   enrichListing,
   normalizeNormalizedRecord,
 } from "../lib/enrichment/pipeline.mjs";
@@ -216,6 +218,24 @@ const RECOMMENDED_NORMALIZED_COLUMNS = [
 
 const NOT_IMPLEMENTED_SIGNAL_NOTES = [
   "traffic is not currently produced by the Google enrichment client; the Routes integration only computes walking matrices for amenity proximity.",
+];
+
+const REQUIRED_DATASET_FIELDS_FOR_ENRICHMENT = [
+  {
+    query_component: "street",
+    normalized_columns: ["address"],
+    reason: "required to build the geocoding street component",
+  },
+  {
+    query_component: "district",
+    normalized_columns: ["district", "neighbourhood"],
+    reason: "required to anchor the geocoding query to the right district",
+  },
+  {
+    query_component: "city",
+    normalized_columns: ["city"],
+    reason: "required to build the geocoding city component",
+  },
 ];
 
 function loadEnvFileIfPresent(filePath) {
@@ -560,12 +580,14 @@ async function main() {
 
   const readinessRows = enrichmentListings.map((listing) => {
     const geocodeInput = buildGeocodeInput(listing);
+    const requirements = describeGeocodeQueryRequirements(listing);
     return {
       source_listing_id: listing.sourceListingId,
       source: listing.source,
       raw_listing_id: listing.rawListingId,
       geocode_status: geocodeInput.status,
       geocode_query: geocodeInput.query,
+      missing_query_components: requirements.missingComponents,
     };
   });
 
@@ -594,6 +616,12 @@ async function main() {
   const missingNormalizedColumns = RECOMMENDED_NORMALIZED_COLUMNS.filter(
     (column) => !Object.hasOwn(normalizedProperties, column.name),
   );
+  const missingQueryComponentCounts = readinessRows.reduce((counts, row) => {
+    for (const component of row.missing_query_components) {
+      counts[component] = (counts[component] || 0) + 1;
+    }
+    return counts;
+  }, {});
 
   printTableDefinition("listings_raw", listingsRawDefinition);
   printTableDefinition("listings_normalized", listingsNormalizedDefinition);
@@ -606,11 +634,25 @@ async function main() {
   console.log("\nlocal normalization");
   console.log(`- projected_rows: ${normalizedRows.length}`);
   console.log(`- geocode_ready_rows: ${readyCount}/${normalizedRows.length}`);
+  console.log(
+    `- required_geocode_query_components: ${ENRICHMENT_QUERY_COMPONENTS.join(", ")}`,
+  );
   for (const row of readinessRows) {
     console.log(
       `- ${row.source_listing_id}: ${row.geocode_status}${
         row.geocode_query ? ` | ${row.geocode_query}` : ""
+      }${
+        row.missing_query_components.length
+          ? ` | missing=${row.missing_query_components.join(",")}`
+          : ""
       }`,
+    );
+  }
+
+  console.log("\ndataset fields required for enrichment-ready queries");
+  for (const field of REQUIRED_DATASET_FIELDS_FOR_ENRICHMENT) {
+    console.log(
+      `- ${field.query_component}: columns=${field.normalized_columns.join(" | ")} | missing_rows=${missingQueryComponentCounts[field.query_component] || 0} | ${field.reason}`,
     );
   }
 

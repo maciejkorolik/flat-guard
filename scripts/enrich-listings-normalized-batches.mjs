@@ -185,6 +185,7 @@ function buildPotentialIssues(enrichment) {
       scope: "geocode",
       status: enrichment.geocode.status,
       query: enrichment.geocode.query,
+      api: enrichment.geocode.payload?.api || "geocode",
       provider_status: enrichment.geocode.payload?.status || null,
       provider_error_message:
         enrichment.geocode.payload?.error_message ||
@@ -201,8 +202,11 @@ function buildPotentialIssues(enrichment) {
     if (signal.status === "failed") {
       issues.push({
         scope,
+        api: signal.payload?.api || null,
         status: signal.status,
-        error: signal.payload?.error || null,
+        provider_status: signal.payload?.status || null,
+        provider_error_message:
+          signal.payload?.error_message || signal.payload?.error || null,
       });
     }
   }
@@ -402,6 +406,18 @@ async function main() {
 
       const issues = buildPotentialIssues(enrichment);
       if (issues.length) {
+        const deniedIssues = issues.filter(
+          (issue) =>
+            issue.provider_status === "REQUEST_DENIED" ||
+            issue.provider_error_message?.includes("403") ||
+            issue.provider_error_message?.includes("Forbidden"),
+        );
+        for (const issue of deniedIssues) {
+          console.error(
+            `[denied] listing=${listing.normalizedListingId} source=${listing.source} api=${issue.api || issue.scope} status=${issue.provider_status || "unknown"} message=${issue.provider_error_message || "n/a"}`,
+          );
+        }
+
         issueEntries.push({
           listing_id: listing.normalizedListingId,
           source: listing.source,
