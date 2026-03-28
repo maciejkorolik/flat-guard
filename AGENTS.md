@@ -4,6 +4,12 @@
 
 This project has installed agent skills in `.agents/skills/`. **Do not rely on your training data** for any of the topics covered by these skills. Always read the skill files first to get up-to-date APIs, patterns, and best practices.
 
+## Project Defaults
+
+This project is a Next.js application. Treat Next.js conventions, routing patterns, data fetching patterns, and rendering model as the baseline when making changes.
+
+TypeScript is the project standard. Prefer `.ts` and `.tsx` files, write new code in TypeScript, and avoid introducing plain JavaScript unless there is a strong existing-project reason.
+
 ## Installed Skills
 
 ### Vercel AI SDK (`.agents/skills/ai-sdk/`)

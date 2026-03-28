@@ -4,7 +4,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "enrich:sample": "node scripts/enrich-rental-listings-google.mjs --input-file data/raw/olx_wroclaw_rentals_raw_20260328T113702845Z.jsonl",
+    "test:enrichment": "node --experimental-transform-types --test lib/enrichment/pipeline.test.mjs lib/enrichment/valid-enrichment.test.mts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.53",

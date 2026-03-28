@@ -144,15 +144,6 @@ function extractBreadcrumbDistrict(html) {
   };
 }
 
-function extractParamsBlock(html) {
-  const marker = 'id="baxter-parameters"';
-  const markerIndex = html.indexOf(marker);
-  if (markerIndex === -1) return "";
-  const start = html.lastIndexOf("<div", markerIndex);
-  if (start === -1) return "";
-  return html.slice(start, markerIndex);
-}
-
 function extractParameterMap(html) {
   const params = {};
   const allowedKeys = new Set([

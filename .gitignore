@@ -54,3 +54,10 @@ data/raw/*
 !data/raw/olx_wroclaw_rentals_raw_20260328T113702845Z.csv
 !data/raw/olx_wroclaw_rentals_raw_20260328T113702845Z.jsonl
 !data/raw/olx_wroclaw_rentals_raw_20260328T113702845Z.meta.json
+
+# local enrichment artifacts
+data/enriched/*
+!data/enriched/README.md
+
+# local worktree metadata
+.dmux/

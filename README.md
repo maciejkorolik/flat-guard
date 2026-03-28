@@ -22,6 +22,56 @@ Primary handoff files:
 - [load_olx_raw_jsonl.sql](/Users/bruno/Desktop/work/hackathon/supabase/sql/load_olx_raw_jsonl.sql) — JSONL-to-Postgres loader
 - [crawl-olx-wroclaw-raw.mjs](/Users/bruno/Desktop/work/hackathon/scripts/crawl-olx-wroclaw-raw.mjs) — OLX Wroclaw raw crawler
 
+## Enrichment Workstream
+
+This branch also adds a Google-backed enrichment runner for raw listings.
+
+Current scope:
+
+- strict geocoding from `street + district + city`
+- short-horizon weather snapshot
+- short-horizon air-quality snapshot
+- conservative sunlight estimate with confidence and reasons
+- nearest lifestyle places ranked by walking time
+- baseline proximity categories: park, grocery, library
+- curated extra categories: gym, climbing
+- optional free-text custom categories
+
+Primary files:
+
+- [20260328153000_listing_enrichments.sql](/Users/bruno/Desktop/work/hackathon/supabase/migrations/20260328153000_listing_enrichments.sql) — enrichment tables
+- [enrich-rental-listings-google.mjs](/Users/bruno/Desktop/work/hackathon/scripts/enrich-rental-listings-google.mjs) — file/DB enrichment CLI
+- [data/enriched/README.md](/Users/bruno/Desktop/work/hackathon/data/enriched/README.md) — local output contract
+
+Run the sample file locally:
+
+```bash
+pnpm enrich:sample -- --skip-db-writes
+```
+
+The enrichment CLI auto-loads `.env.local` and `.env` from the current worktree and parent directories, so a repo-root `/Users/bruno/Desktop/work/hackathon/.env.local` is picked up from this `.dmux/worktrees/...` checkout.
+
+Run against DB rows for one ingest run:
+
+```bash
+node scripts/enrich-rental-listings-google.mjs --ingest-run-id <uuid> --category gym
+```
+
+Environment required for enrichment:
+
+- `GOOGLE_MAPS_API_KEY`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY` when reading from or writing to Supabase
+
+Google Cloud setup required for enrichment:
+
+- enable `Geocoding API`
+- enable `Places API`
+- enable `Routes API`
+- enable `Weather API`
+- enable `Air Quality API`
+- enable `Solar API`
+
 ## Layouts
 
 | Area     | Path                         | Purpose                                                                           |
